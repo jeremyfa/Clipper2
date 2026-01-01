@@ -8,6 +8,6 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="src/**/*.cs" />
+    <Compile Include="bin/test-cs/src/**/*.cs" />
   </ItemGroup>
 </Project>

@@ -1,7 +1,4 @@
 .*
 
 # Haxe build outputs
-Haxe/bin/*
-!Haxe/bin/test-cs/
-Haxe/bin/test-cs/*
-!Haxe/bin/test-cs/TestRunner.csproj
+/Haxe/bin/

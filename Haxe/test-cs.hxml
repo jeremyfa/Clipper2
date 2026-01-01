@@ -3,4 +3,4 @@
 -main test.TestRunner
 -cs bin/test-cs
 -D no-compilation
---cmd dotnet run --project bin/test-cs/TestRunner.csproj
+--cmd dotnet run --project test-cs.csproj --artifacts-path bin/test-cs

@@ -3,3 +3,4 @@
 -main test.TestRunner
 -cpp bin/test-cpp
 -D HXCPP_M64
+--cmd bin/test-cpp/TestRunner

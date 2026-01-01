@@ -2,3 +2,4 @@
 -cp test
 -main test.TestRunner
 -php bin/test-php
+--cmd php bin/test-php/index.php

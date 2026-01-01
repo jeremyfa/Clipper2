@@ -2,3 +2,4 @@
 -cp test
 -main test.TestRunner
 -js bin/test-js/tests.js
+--cmd node bin/test-js/tests.js
