@@ -1,0 +1,3 @@
+-cp src
+--no-output
+-D HXCPP_M64

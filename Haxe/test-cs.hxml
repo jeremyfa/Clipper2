@@ -1,0 +1,6 @@
+-cp src
+-cp test
+-main test.TestRunner
+-cs bin/test-cs
+-D no-compilation
+--cmd dotnet run --project bin/test-cs/TestRunner.csproj
