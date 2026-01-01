@@ -1,7 +1,7 @@
 {
   "name": "clipper",
   "url": "https://github.com/jeremyfa/Clipper2",
-  "license": "BSL-1.0",
+  "license": "MIT",
   "tags": ["cross", "graphics", "geometry", "polygon", "clipping", "offsetting", "triangulation"],
   "description": "Polygon clipping and offsetting library - boolean operations, offsetting, and triangulation (Haxe port of Clipper2)",
   "version": "2.0.1",
