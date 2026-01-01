@@ -1,12 +1,12 @@
-package clipper2;
+package clipper;
 
 import haxe.Int64;
-import clipper2.internal.ClipperCore;
-import clipper2.ClipperEngine;
-import clipper2.ClipperOffset;
-import clipper2.ClipperRectClip;
-import clipper2.ClipperMinkowski;
-import clipper2.ClipperTriangulation;
+import clipper.internal.ClipperCore;
+import clipper.ClipperEngine;
+import clipper.ClipperOffset;
+import clipper.ClipperRectClip;
+import clipper.ClipperMinkowski;
+import clipper.ClipperTriangulation;
 
 /**
  * High-level static API for common polygon clipping and offsetting operations.

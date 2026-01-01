@@ -1,4 +1,4 @@
-package clipper2.internal;
+package clipper.internal;
 
 import haxe.Int64;
 

@@ -1,13 +1,13 @@
 package test;
 
 import haxe.Int64;
-import clipper2.internal.ClipperCore;
-import clipper2.ClipperEngine;
-import clipper2.ClipperOffset;
-import clipper2.ClipperRectClip;
-import clipper2.ClipperMinkowski;
-import clipper2.ClipperTriangulation;
-import clipper2.Clipper;
+import clipper.internal.ClipperCore;
+import clipper.ClipperEngine;
+import clipper.ClipperOffset;
+import clipper.ClipperRectClip;
+import clipper.ClipperMinkowski;
+import clipper.ClipperTriangulation;
+import clipper.Clipper;
 
 class TestRunner {
     static var passed:Int = 0;

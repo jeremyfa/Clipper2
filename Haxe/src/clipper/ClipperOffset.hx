@@ -1,8 +1,8 @@
-package clipper2;
+package clipper;
 
 import haxe.Int64;
-import clipper2.internal.ClipperCore;
-import clipper2.ClipperEngine;
+import clipper.internal.ClipperCore;
+import clipper.ClipperEngine;
 
 // ============================================================================
 // Enums
