@@ -23,7 +23,8 @@ abstract ClipperInt64(Float) from Float to Float {
     }
 
     @:from public static inline function fromFloat(v:Float):ClipperInt64 {
-        return new ClipperInt64(v);
+        // Truncate towards zero to match haxe.Int64.fromFloat behavior
+        return new ClipperInt64(v >= 0 ? Math.floor(v) : Math.ceil(v));
     }
 
     public static inline function make(high:Int, low:Int):ClipperInt64 {
