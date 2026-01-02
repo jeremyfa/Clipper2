@@ -1019,6 +1019,10 @@ class Delaunay {
         var qNum = ax * dx + ay * dy;
         var denom = sqr(dx) + sqr(dy);
 
+        // Guard against degenerate segment (both endpoints identical)
+        if (denom == 0)
+            return distanceSqr(pt, segPt1);
+
         if (qNum < 0)
             return distanceSqr(pt, segPt1);
         if (qNum > denom)
