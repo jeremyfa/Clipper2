@@ -1,4 +1,4 @@
-package clipper.internal;
+package clipper;
 
 // ============================================================================
 // ClipperInt64 - Abstraction for 64-bit integers

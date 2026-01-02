@@ -1,7 +1,7 @@
 package clipper;
 
 
-import clipper.internal.ClipperCore;
+import clipper.ClipperCore;
 import clipper.ClipperEngine;
 
 // ============================================================================

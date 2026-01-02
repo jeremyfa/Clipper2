@@ -1,7 +1,7 @@
 package test;
 
 
-import clipper.internal.ClipperCore;
+import clipper.ClipperCore;
 import clipper.ClipperEngine;
 import clipper.ClipperOffset;
 import clipper.ClipperRectClip;

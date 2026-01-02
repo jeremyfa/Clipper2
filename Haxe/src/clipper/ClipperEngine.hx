@@ -1,6 +1,6 @@
 package clipper;
 
-import clipper.internal.ClipperCore;
+import clipper.ClipperCore;
 
 // ============================================================================
 // Internal enums
