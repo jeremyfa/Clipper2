@@ -1,6 +1,6 @@
 package clipper;
 
-import haxe.Int64;
+
 import clipper.internal.ClipperCore;
 import clipper.ClipperEngine;
 
@@ -251,8 +251,8 @@ class ClipperOffset {
     public static function getLowestPathInfo(paths:Paths64):{idx:Int, isNegArea:Bool} {
         var idx = -1;
         var isNegArea = false;
-        var botPtX:Int64 = InternalClipper.maxInt64;
-        var botPtY:Int64 = InternalClipper.minInt64;
+        var botPtX:ClipperInt64 = InternalClipper.maxInt64;
+        var botPtY:ClipperInt64 = InternalClipper.minInt64;
 
         for (i in 0...paths.length) {
             var a:Float = Math.POSITIVE_INFINITY;
@@ -692,10 +692,10 @@ class ClipperOffset {
                 } else {
                     var d = Std.int(Math.ceil(_groupDelta));
                     var r = new Rect64(
-                        pt.x - Int64.ofInt(d),
-                        pt.y - Int64.ofInt(d),
-                        pt.x + Int64.ofInt(d),
-                        pt.y + Int64.ofInt(d)
+                        pt.x - ClipperInt64.ofInt(d),
+                        pt.y - ClipperInt64.ofInt(d),
+                        pt.x + ClipperInt64.ofInt(d),
+                        pt.y + ClipperInt64.ofInt(d)
                     );
                     pathOut = r.asPath();
                     #if clipper_usingz

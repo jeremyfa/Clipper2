@@ -1,6 +1,6 @@
 package clipper;
 
-import haxe.Int64;
+
 import clipper.internal.ClipperCore;
 import clipper.ClipperEngine;
 import clipper.ClipperOffset;
@@ -308,7 +308,7 @@ class Clipper {
     /**
      * Translates a path by dx, dy.
      */
-    public static function translatePath(path:Path64, dx:Int64, dy:Int64):Path64 {
+    public static function translatePath(path:Path64, dx:ClipperInt64, dy:ClipperInt64):Path64 {
         var result = new Path64();
         #if clipper_usingz
         for (pt in path)
@@ -323,7 +323,7 @@ class Clipper {
     /**
      * Translates multiple paths by dx, dy.
      */
-    public static function translatePaths(paths:Paths64, dx:Int64, dy:Int64):Paths64 {
+    public static function translatePaths(paths:Paths64, dx:ClipperInt64, dy:ClipperInt64):Paths64 {
         var result = new Paths64();
         for (path in paths)
             result.push(translatePath(path, dx, dy));

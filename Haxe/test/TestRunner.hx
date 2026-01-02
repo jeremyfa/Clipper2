@@ -1,6 +1,6 @@
 package test;
 
-import haxe.Int64;
+
 import clipper.internal.ClipperCore;
 import clipper.ClipperEngine;
 import clipper.ClipperOffset;
@@ -58,11 +58,11 @@ class TestRunner {
     }
 
     static function testInt64():Void {
-        trace("Testing Int64...");
+        trace("Testing ClipperInt64...");
 
         // Basic operations
-        var a:Int64 = 100;
-        var b:Int64 = 50;
+        var a:ClipperInt64 = 100;
+        var b:ClipperInt64 = 50;
 
         assertTrue(a + b == 150, "Int64 addition");
         assertTrue(a - b == 50, "Int64 subtraction");
@@ -76,7 +76,7 @@ class TestRunner {
         assertTrue(b <= 50, "Int64 less than or equal");
 
         // Negative numbers
-        var c:Int64 = -100;
+        var c:ClipperInt64 = -100;
         assertTrue(c < 0, "Int64 negative less than zero");
         assertTrue(InternalClipper.abs64(c) == 100, "Int64 abs");
 

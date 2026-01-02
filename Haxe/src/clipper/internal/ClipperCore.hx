@@ -1,6 +1,346 @@
 package clipper.internal;
 
-import haxe.Int64;
+// ============================================================================
+// ClipperInt64 - Abstraction for 64-bit integers
+// ============================================================================
+
+#if clipper_int64_as_float64
+
+/**
+ * Float-backed implementation for better JS performance.
+ * Uses native Float which is more efficient on JS target.
+ */
+abstract ClipperInt64(Float) from Float to Float {
+    public static inline var maxValue:ClipperInt64 = 9223372036854775807.0;
+    public static inline var minValue:ClipperInt64 = -9223372036854775808.0;
+
+    public inline function new(v:Float) {
+        this = v;
+    }
+
+    @:from public static inline function ofInt(v:Int):ClipperInt64 {
+        return new ClipperInt64(v);
+    }
+
+    @:from public static inline function fromFloat(v:Float):ClipperInt64 {
+        return new ClipperInt64(v);
+    }
+
+    public static inline function make(high:Int, low:Int):ClipperInt64 {
+        var lowAsFloat:Float = if (low < 0) low + 4294967296.0 else low;
+        return new ClipperInt64(high * 4294967296.0 + lowAsFloat);
+    }
+
+    public inline function toFloat():Float {
+        return this;
+    }
+
+    public inline function toInt():Int {
+        return Std.int(this);
+    }
+
+    public inline function getHigh():Int {
+        return Std.int(this / 4294967296.0);
+    }
+
+    public inline function getLow():Int {
+        var remainder = this % 4294967296.0;
+        return Std.int(if (remainder < 0) remainder + 4294967296.0 else remainder);
+    }
+
+    // Arithmetic operators
+    @:op(A + B) static inline function add(a:ClipperInt64, b:ClipperInt64):ClipperInt64 {
+        return new ClipperInt64((a : Float) + (b : Float));
+    }
+
+    @:op(A - B) static inline function sub(a:ClipperInt64, b:ClipperInt64):ClipperInt64 {
+        return new ClipperInt64((a : Float) - (b : Float));
+    }
+
+    @:op(A * B) static inline function mul(a:ClipperInt64, b:ClipperInt64):ClipperInt64 {
+        return new ClipperInt64((a : Float) * (b : Float));
+    }
+
+    @:op(A / B) static inline function div(a:ClipperInt64, b:ClipperInt64):ClipperInt64 {
+        var result = (a : Float) / (b : Float);
+        return new ClipperInt64(result >= 0 ? Math.floor(result) : Math.ceil(result));
+    }
+
+    @:op(A % B) static inline function mod(a:ClipperInt64, b:ClipperInt64):ClipperInt64 {
+        return new ClipperInt64((a : Float) % (b : Float));
+    }
+
+    @:op(-A) static inline function neg(a:ClipperInt64):ClipperInt64 {
+        return new ClipperInt64(-(a : Float));
+    }
+
+    // Comparison operators
+    @:op(A == B) static inline function eq(a:ClipperInt64, b:ClipperInt64):Bool {
+        return (a : Float) == (b : Float);
+    }
+
+    @:op(A != B) static inline function neq(a:ClipperInt64, b:ClipperInt64):Bool {
+        return (a : Float) != (b : Float);
+    }
+
+    @:op(A < B) static inline function lt(a:ClipperInt64, b:ClipperInt64):Bool {
+        return (a : Float) < (b : Float);
+    }
+
+    @:op(A <= B) static inline function lte(a:ClipperInt64, b:ClipperInt64):Bool {
+        return (a : Float) <= (b : Float);
+    }
+
+    @:op(A > B) static inline function gt(a:ClipperInt64, b:ClipperInt64):Bool {
+        return (a : Float) > (b : Float);
+    }
+
+    @:op(A >= B) static inline function gte(a:ClipperInt64, b:ClipperInt64):Bool {
+        return (a : Float) >= (b : Float);
+    }
+
+    // Int comparison operators
+    @:op(A < B) static inline function ltInt(a:ClipperInt64, b:Int):Bool {
+        return (a : Float) < b;
+    }
+
+    @:op(A <= B) static inline function lteInt(a:ClipperInt64, b:Int):Bool {
+        return (a : Float) <= b;
+    }
+
+    @:op(A > B) static inline function gtInt(a:ClipperInt64, b:Int):Bool {
+        return (a : Float) > b;
+    }
+
+    @:op(A >= B) static inline function gteInt(a:ClipperInt64, b:Int):Bool {
+        return (a : Float) >= b;
+    }
+
+    @:op(A == B) static inline function eqInt(a:ClipperInt64, b:Int):Bool {
+        return (a : Float) == b;
+    }
+
+    @:op(A != B) static inline function neqInt(a:ClipperInt64, b:Int):Bool {
+        return (a : Float) != b;
+    }
+
+    // Helper methods
+    public inline function abs():ClipperInt64 {
+        return new ClipperInt64(Math.abs(this));
+    }
+
+    public static inline function min(a:ClipperInt64, b:ClipperInt64):ClipperInt64 {
+        return new ClipperInt64(Math.min((a : Float), (b : Float)));
+    }
+
+    public static inline function max(a:ClipperInt64, b:ClipperInt64):ClipperInt64 {
+        return new ClipperInt64(Math.max((a : Float), (b : Float)));
+    }
+
+    public inline function triSign():Int {
+        return if ((this : Float) < 0) -1 else if ((this : Float) > 0) 1 else 0;
+    }
+
+    /**
+     * Round to ClipperInt64 using MidpointRounding.AwayFromZero (like C#).
+     */
+    public static inline function roundFromFloat(value:Float):ClipperInt64 {
+        var rounded = value >= 0 ? Math.floor(value + 0.5) : Math.ceil(value - 0.5);
+        return new ClipperInt64(rounded);
+    }
+
+    /**
+     * Round to ClipperInt64 using MidpointRounding.ToEven (banker's rounding).
+     */
+    public static function roundEvenFromFloat(value:Float):ClipperInt64 {
+        var rounded = Math.round(value);
+        // Check if exactly at midpoint
+        if (Math.abs(value - Math.floor(value) - 0.5) < 1e-10) {
+            // Round to even
+            var floor = Math.floor(value);
+            if (Std.int(floor) % 2 == 0) {
+                rounded = floor;
+            } else {
+                rounded = Math.ceil(value);
+            }
+        }
+        return new ClipperInt64(rounded);
+    }
+}
+
+#else
+
+/**
+ * Default haxe.Int64-backed implementation for full precision.
+ */
+abstract ClipperInt64(haxe.Int64) from haxe.Int64 to haxe.Int64 {
+    public static var maxValue(get, never):ClipperInt64;
+    public static var minValue(get, never):ClipperInt64;
+
+    static inline function get_maxValue():ClipperInt64 {
+        return cast haxe.Int64.make(0x7FFFFFFF, 0xFFFFFFFF);
+    }
+
+    static inline function get_minValue():ClipperInt64 {
+        return cast haxe.Int64.make(0x80000000, 0x00000000);
+    }
+
+    public inline function new(v:haxe.Int64) {
+        this = v;
+    }
+
+    @:from public static inline function ofInt(v:Int):ClipperInt64 {
+        return cast haxe.Int64.ofInt(v);
+    }
+
+    @:from public static inline function fromFloat(v:Float):ClipperInt64 {
+        return cast haxe.Int64.fromFloat(v);
+    }
+
+    public static inline function make(high:Int, low:Int):ClipperInt64 {
+        return cast haxe.Int64.make(high, low);
+    }
+
+    public inline function toFloat():Float {
+        var high:Float = this.high;
+        var low:Float = this.low;
+        var lowAsFloat = if (low < 0) low + 4294967296.0 else low;
+        return high * 4294967296.0 + lowAsFloat;
+    }
+
+    public inline function toInt():Int {
+        return this.low;
+    }
+
+    public inline function getHigh():Int {
+        return this.high;
+    }
+
+    public inline function getLow():Int {
+        return this.low;
+    }
+
+    // Arithmetic operators
+    @:op(A + B) static inline function add(a:ClipperInt64, b:ClipperInt64):ClipperInt64 {
+        return cast((a : haxe.Int64) + (b : haxe.Int64));
+    }
+
+    @:op(A - B) static inline function sub(a:ClipperInt64, b:ClipperInt64):ClipperInt64 {
+        return cast((a : haxe.Int64) - (b : haxe.Int64));
+    }
+
+    @:op(A * B) static inline function mul(a:ClipperInt64, b:ClipperInt64):ClipperInt64 {
+        return cast((a : haxe.Int64) * (b : haxe.Int64));
+    }
+
+    @:op(A / B) static inline function div(a:ClipperInt64, b:ClipperInt64):ClipperInt64 {
+        return cast haxe.Int64.div((a : haxe.Int64), (b : haxe.Int64));
+    }
+
+    @:op(A % B) static inline function mod(a:ClipperInt64, b:ClipperInt64):ClipperInt64 {
+        return cast haxe.Int64.mod((a : haxe.Int64), (b : haxe.Int64));
+    }
+
+    @:op(-A) static inline function neg(a:ClipperInt64):ClipperInt64 {
+        return cast haxe.Int64.neg((a : haxe.Int64));
+    }
+
+    // Comparison operators
+    @:op(A == B) static inline function eq(a:ClipperInt64, b:ClipperInt64):Bool {
+        return (a : haxe.Int64) == (b : haxe.Int64);
+    }
+
+    @:op(A != B) static inline function neq(a:ClipperInt64, b:ClipperInt64):Bool {
+        return (a : haxe.Int64) != (b : haxe.Int64);
+    }
+
+    @:op(A < B) static inline function lt(a:ClipperInt64, b:ClipperInt64):Bool {
+        return (a : haxe.Int64) < (b : haxe.Int64);
+    }
+
+    @:op(A <= B) static inline function lte(a:ClipperInt64, b:ClipperInt64):Bool {
+        return (a : haxe.Int64) <= (b : haxe.Int64);
+    }
+
+    @:op(A > B) static inline function gt(a:ClipperInt64, b:ClipperInt64):Bool {
+        return (a : haxe.Int64) > (b : haxe.Int64);
+    }
+
+    @:op(A >= B) static inline function gte(a:ClipperInt64, b:ClipperInt64):Bool {
+        return (a : haxe.Int64) >= (b : haxe.Int64);
+    }
+
+    // Int comparison operators
+    @:op(A < B) static inline function ltInt(a:ClipperInt64, b:Int):Bool {
+        return (a : haxe.Int64) < haxe.Int64.ofInt(b);
+    }
+
+    @:op(A <= B) static inline function lteInt(a:ClipperInt64, b:Int):Bool {
+        return (a : haxe.Int64) <= haxe.Int64.ofInt(b);
+    }
+
+    @:op(A > B) static inline function gtInt(a:ClipperInt64, b:Int):Bool {
+        return (a : haxe.Int64) > haxe.Int64.ofInt(b);
+    }
+
+    @:op(A >= B) static inline function gteInt(a:ClipperInt64, b:Int):Bool {
+        return (a : haxe.Int64) >= haxe.Int64.ofInt(b);
+    }
+
+    @:op(A == B) static inline function eqInt(a:ClipperInt64, b:Int):Bool {
+        return (a : haxe.Int64) == haxe.Int64.ofInt(b);
+    }
+
+    @:op(A != B) static inline function neqInt(a:ClipperInt64, b:Int):Bool {
+        return (a : haxe.Int64) != haxe.Int64.ofInt(b);
+    }
+
+    // Helper methods
+    public inline function abs():ClipperInt64 {
+        return cast(this < haxe.Int64.ofInt(0) ? haxe.Int64.neg(this) : this);
+    }
+
+    public static inline function min(a:ClipperInt64, b:ClipperInt64):ClipperInt64 {
+        return if ((a : haxe.Int64) < (b : haxe.Int64)) a else b;
+    }
+
+    public static inline function max(a:ClipperInt64, b:ClipperInt64):ClipperInt64 {
+        return if ((a : haxe.Int64) > (b : haxe.Int64)) a else b;
+    }
+
+    public inline function triSign():Int {
+        var zero = haxe.Int64.ofInt(0);
+        return if (this < zero) -1 else if (this > zero) 1 else 0;
+    }
+
+    /**
+     * Round to ClipperInt64 using MidpointRounding.AwayFromZero (like C#).
+     */
+    public static inline function roundFromFloat(value:Float):ClipperInt64 {
+        var rounded = value >= 0 ? Math.floor(value + 0.5) : Math.ceil(value - 0.5);
+        return cast haxe.Int64.fromFloat(rounded);
+    }
+
+    /**
+     * Round to ClipperInt64 using MidpointRounding.ToEven (banker's rounding).
+     */
+    public static function roundEvenFromFloat(value:Float):ClipperInt64 {
+        var rounded = Math.round(value);
+        // Check if exactly at midpoint
+        if (Math.abs(value - Math.floor(value) - 0.5) < 1e-10) {
+            // Round to even
+            var floor = Math.floor(value);
+            if (Std.int(floor) % 2 == 0) {
+                rounded = floor;
+            } else {
+                rounded = Math.ceil(value);
+            }
+        }
+        return cast haxe.Int64.fromFloat(rounded);
+    }
+}
+
+#end
 
 // ============================================================================
 // Enums
@@ -56,17 +396,17 @@ enum abstract PointInPolygonResult(Int) to Int {
  * Internal implementation class for Point64.
  */
 class Point64Impl {
-    public var x:Int64;
-    public var y:Int64;
+    public var x:ClipperInt64;
+    public var y:ClipperInt64;
     #if clipper_usingz
-    public var z:Int64;
+    public var z:ClipperInt64;
     #end
 
-    public inline function new(x:Int64, y:Int64 #if clipper_usingz , ?z:Int64 #end) {
+    public inline function new(x:ClipperInt64, y:ClipperInt64 #if clipper_usingz , ?z:ClipperInt64 #end) {
         this.x = x;
         this.y = y;
         #if clipper_usingz
-        this.z = z != null ? z : Int64.ofInt(0);
+        this.z = z != null ? z : ClipperInt64.ofInt(0);
         #end
     }
 }
@@ -75,23 +415,23 @@ class Point64Impl {
  * Point with 64-bit integer coordinates.
  */
 abstract Point64(Point64Impl) from Point64Impl {
-    public var x(get, set):Int64;
-    public var y(get, set):Int64;
+    public var x(get, set):ClipperInt64;
+    public var y(get, set):ClipperInt64;
     #if clipper_usingz
-    public var z(get, set):Int64;
+    public var z(get, set):ClipperInt64;
     #end
 
-    public inline function new(x:Int64, y:Int64 #if clipper_usingz , ?z:Int64 #end) {
+    public inline function new(x:ClipperInt64, y:ClipperInt64 #if clipper_usingz , ?z:ClipperInt64 #end) {
         this = new Point64Impl(x, y #if clipper_usingz , z #end);
     }
 
-    inline function get_x():Int64 return this.x;
-    inline function set_x(value:Int64):Int64 return this.x = value;
-    inline function get_y():Int64 return this.y;
-    inline function set_y(value:Int64):Int64 return this.y = value;
+    inline function get_x():ClipperInt64 return this.x;
+    inline function set_x(value:ClipperInt64):ClipperInt64 return this.x = value;
+    inline function get_y():ClipperInt64 return this.y;
+    inline function set_y(value:ClipperInt64):ClipperInt64 return this.y = value;
     #if clipper_usingz
-    inline function get_z():Int64 return this.z;
-    inline function set_z(value:Int64):Int64 return this.z = value;
+    inline function get_z():ClipperInt64 return this.z;
+    inline function set_z(value:ClipperInt64):ClipperInt64 return this.z = value;
     #end
 
     /**
@@ -106,10 +446,10 @@ abstract Point64(Point64Impl) from Point64Impl {
      */
     public static inline function fromScaled(pt:Point64, scale:Float):Point64 {
         return new Point64(
-            InternalClipper.roundToInt64(InternalClipper.toFloat(pt.x) * scale),
-            InternalClipper.roundToInt64(InternalClipper.toFloat(pt.y) * scale)
+            ClipperInt64.roundFromFloat(pt.x.toFloat() * scale),
+            ClipperInt64.roundFromFloat(pt.y.toFloat() * scale)
             #if clipper_usingz
-            , InternalClipper.roundToInt64(InternalClipper.toFloat(pt.z) * scale)
+            , ClipperInt64.roundFromFloat(pt.z.toFloat() * scale)
             #end
         );
     }
@@ -119,8 +459,8 @@ abstract Point64(Point64Impl) from Point64Impl {
      */
     public static inline function fromPointD(pt:PointD):Point64 {
         return new Point64(
-            InternalClipper.roundToInt64(pt.x),
-            InternalClipper.roundToInt64(pt.y)
+            ClipperInt64.roundFromFloat(pt.x),
+            ClipperInt64.roundFromFloat(pt.y)
             #if clipper_usingz
             , pt.z
             #end
@@ -132,8 +472,8 @@ abstract Point64(Point64Impl) from Point64Impl {
      */
     public static inline function fromPointDScaled(pt:PointD, scale:Float):Point64 {
         return new Point64(
-            InternalClipper.roundToInt64(pt.x * scale),
-            InternalClipper.roundToInt64(pt.y * scale)
+            ClipperInt64.roundFromFloat(pt.x * scale),
+            ClipperInt64.roundFromFloat(pt.y * scale)
             #if clipper_usingz
             , pt.z
             #end
@@ -145,10 +485,10 @@ abstract Point64(Point64Impl) from Point64Impl {
      */
     public static inline function fromFloats(x:Float, y:Float #if clipper_usingz , z:Float = 0.0 #end):Point64 {
         return new Point64(
-            InternalClipper.roundToInt64(x),
-            InternalClipper.roundToInt64(y)
+            ClipperInt64.roundFromFloat(x),
+            ClipperInt64.roundFromFloat(y)
             #if clipper_usingz
-            , InternalClipper.roundToInt64(z)
+            , ClipperInt64.roundFromFloat(z)
             #end
         );
     }
@@ -190,9 +530,7 @@ abstract Point64(Point64Impl) from Point64Impl {
     }
 
     public function hashCode():Int {
-        var xVal:haxe.Int64 = x;
-        var yVal:haxe.Int64 = y;
-        return HashCode.combine(xVal.high, xVal.low, yVal.high, yVal.low);
+        return HashCode.combine(x.getHigh(), x.getLow(), y.getHigh(), y.getLow());
     }
 }
 
@@ -207,14 +545,14 @@ class PointDImpl {
     public var x:Float;
     public var y:Float;
     #if clipper_usingz
-    public var z:Int64;
+    public var z:ClipperInt64;
     #end
 
-    public inline function new(x:Float, y:Float #if clipper_usingz , ?z:Int64 #end) {
+    public inline function new(x:Float, y:Float #if clipper_usingz , ?z:ClipperInt64 #end) {
         this.x = x;
         this.y = y;
         #if clipper_usingz
-        this.z = z != null ? z : Int64.ofInt(0);
+        this.z = z != null ? z : ClipperInt64.ofInt(0);
         #end
     }
 }
@@ -226,10 +564,10 @@ abstract PointD(PointDImpl) from PointDImpl {
     public var x(get, set):Float;
     public var y(get, set):Float;
     #if clipper_usingz
-    public var z(get, set):Int64;
+    public var z(get, set):ClipperInt64;
     #end
 
-    public inline function new(x:Float, y:Float #if clipper_usingz , ?z:Int64 #end) {
+    public inline function new(x:Float, y:Float #if clipper_usingz , ?z:ClipperInt64 #end) {
         this = new PointDImpl(x, y #if clipper_usingz , z #end);
     }
 
@@ -238,8 +576,8 @@ abstract PointD(PointDImpl) from PointDImpl {
     inline function get_y():Float return this.y;
     inline function set_y(value:Float):Float return this.y = value;
     #if clipper_usingz
-    inline function get_z():Int64 return this.z;
-    inline function set_z(value:Int64):Int64 return this.z = value;
+    inline function get_z():ClipperInt64 return this.z;
+    inline function set_z(value:ClipperInt64):ClipperInt64 return this.z = value;
     #end
 
     /**
@@ -267,8 +605,8 @@ abstract PointD(PointDImpl) from PointDImpl {
      */
     public static inline function fromPoint64(pt:Point64):PointD {
         return new PointD(
-            InternalClipper.toFloat(pt.x),
-            InternalClipper.toFloat(pt.y)
+            pt.x.toFloat(),
+            pt.y.toFloat()
             #if clipper_usingz
             , pt.z
             #end
@@ -280,8 +618,8 @@ abstract PointD(PointDImpl) from PointDImpl {
      */
     public static inline function fromPoint64Scaled(pt:Point64, scale:Float):PointD {
         return new PointD(
-            InternalClipper.toFloat(pt.x) * scale,
-            InternalClipper.toFloat(pt.y) * scale
+            pt.x.toFloat() * scale,
+            pt.y.toFloat() * scale
             #if clipper_usingz
             , pt.z
             #end
@@ -291,10 +629,10 @@ abstract PointD(PointDImpl) from PointDImpl {
     /**
      * Create from integer coordinates.
      */
-    public static inline function fromInts(x:Int64, y:Int64 #if clipper_usingz , ?z:Int64 #end):PointD {
+    public static inline function fromInts(x:ClipperInt64, y:ClipperInt64 #if clipper_usingz , ?z:ClipperInt64 #end):PointD {
         return new PointD(
-            InternalClipper.toFloat(x),
-            InternalClipper.toFloat(y)
+            x.toFloat(),
+            y.toFloat()
             #if clipper_usingz
             , z
             #end
@@ -345,24 +683,24 @@ abstract PointD(PointDImpl) from PointDImpl {
  * Rectangle with 64-bit integer coordinates.
  */
 class Rect64 {
-    public var left:Int64;
-    public var top:Int64;
-    public var right:Int64;
-    public var bottom:Int64;
+    public var left:ClipperInt64;
+    public var top:ClipperInt64;
+    public var right:ClipperInt64;
+    public var bottom:ClipperInt64;
 
-    public function new(?l:Int64, ?t:Int64, ?r:Int64, ?b:Int64) {
-        left = l != null ? l : Int64.ofInt(0);
-        top = t != null ? t : Int64.ofInt(0);
-        right = r != null ? r : Int64.ofInt(0);
-        bottom = b != null ? b : Int64.ofInt(0);
+    public function new(?l:ClipperInt64, ?t:ClipperInt64, ?r:ClipperInt64, ?b:ClipperInt64) {
+        left = l != null ? l : ClipperInt64.ofInt(0);
+        top = t != null ? t : ClipperInt64.ofInt(0);
+        right = r != null ? r : ClipperInt64.ofInt(0);
+        bottom = b != null ? b : ClipperInt64.ofInt(0);
     }
 
     public static function createInvalid():Rect64 {
         var rect = new Rect64();
-        rect.left = InternalClipper.maxInt64;
-        rect.top = InternalClipper.maxInt64;
-        rect.right = InternalClipper.minInt64;
-        rect.bottom = InternalClipper.minInt64;
+        rect.left = ClipperInt64.maxValue;
+        rect.top = ClipperInt64.maxValue;
+        rect.right = ClipperInt64.minValue;
+        rect.bottom = ClipperInt64.minValue;
         return rect;
     }
 
@@ -370,20 +708,20 @@ class Rect64 {
         return new Rect64(rec.left, rec.top, rec.right, rec.bottom);
     }
 
-    public var width(get, set):Int64;
-    inline function get_width():Int64 return right - left;
-    inline function set_width(value:Int64):Int64 { right = left + value; return value; }
+    public var width(get, set):ClipperInt64;
+    inline function get_width():ClipperInt64 return right - left;
+    inline function set_width(value:ClipperInt64):ClipperInt64 { right = left + value; return value; }
 
-    public var height(get, set):Int64;
-    inline function get_height():Int64 return bottom - top;
-    inline function set_height(value:Int64):Int64 { bottom = top + value; return value; }
+    public var height(get, set):ClipperInt64;
+    inline function get_height():ClipperInt64 return bottom - top;
+    inline function set_height(value:ClipperInt64):ClipperInt64 { bottom = top + value; return value; }
 
     public inline function isEmpty():Bool {
         return bottom <= top || right <= left;
     }
 
     public inline function isValid():Bool {
-        return left < InternalClipper.maxInt64;
+        return left < ClipperInt64.maxValue;
     }
 
     public inline function midPoint():Point64 {
@@ -400,8 +738,8 @@ class Rect64 {
     }
 
     public inline function intersects(rec:Rect64):Bool {
-        return (InternalClipper.max64(left, rec.left) <= InternalClipper.min64(right, rec.right)) &&
-               (InternalClipper.max64(top, rec.top) <= InternalClipper.min64(bottom, rec.bottom));
+        return (ClipperInt64.max(left, rec.left) <= ClipperInt64.min(right, rec.right)) &&
+               (ClipperInt64.max(top, rec.top) <= ClipperInt64.min(bottom, rec.bottom));
     }
 
     public function asPath():Path64 {
@@ -548,12 +886,12 @@ class HashCode {
  * 128-bit unsigned integer for high precision multiplication.
  */
 class UInt128 {
-    public var lo64:haxe.Int64;
-    public var hi64:haxe.Int64;
+    public var lo64:ClipperInt64;
+    public var hi64:ClipperInt64;
 
     public inline function new() {
-        lo64 = haxe.Int64.ofInt(0);
-        hi64 = haxe.Int64.ofInt(0);
+        lo64 = ClipperInt64.ofInt(0);
+        hi64 = ClipperInt64.ofInt(0);
     }
 }
 
@@ -565,61 +903,51 @@ class UInt128 {
  * Internal utility functions for Clipper operations.
  */
 class InternalClipper {
-    public static var maxInt64(default, never):Int64 = Int64.make(0x7FFFFFFF, 0xFFFFFFFF);
-    public static var minInt64(default, never):Int64 = Int64.make(0x80000000, 0x00000000);
+    public static var maxInt64(get, never):ClipperInt64;
+    public static var minInt64(get, never):ClipperInt64;
+    public static var maxCoord(get, never):ClipperInt64;
+    public static var invalid64(get, never):ClipperInt64;
 
-    /**
-     * Convert Int64 to Float.
-     */
-    public static inline function toFloat(v:Int64):Float {
-        // Handle sign correctly: high part is signed, low part is unsigned
-        var high:Int = v.high;
-        var low:Int = v.low;
-        // low is unsigned, so we need to convert it properly
-        var lowAsFloat:Float = if (low < 0) low + 4294967296.0 else low;
-        return high * 4294967296.0 + lowAsFloat;
-    }
+    static inline function get_maxInt64():ClipperInt64 return ClipperInt64.maxValue;
+    static inline function get_minInt64():ClipperInt64 return ClipperInt64.minValue;
+    static inline function get_maxCoord():ClipperInt64 return ClipperInt64.maxValue / 4;
+    static inline function get_invalid64():ClipperInt64 return ClipperInt64.maxValue;
 
-    /**
-     * Absolute value of Int64.
-     */
-    public static inline function abs64(v:Int64):Int64 {
-        return v < Int64.ofInt(0) ? -v : v;
-    }
-    public static var maxCoord(default, never):Int64 = maxInt64 / 4;
     public static var maxCoordFloat(default, never):Float = 2305843009213693951.0; // maxCoord as float
     public static var minCoordFloat(default, never):Float = -2305843009213693951.0;
-    public static var invalid64(default, never):Int64 = maxInt64;
 
     public static inline var floatingPointTolerance:Float = 1E-12;
     public static inline var defaultMinimumEdgeLength:Float = 0.1;
 
     static var precisionRangeError:String = "Error: Precision is out of range.";
 
-    /**
-     * Round to Int64 using MidpointRounding.AwayFromZero (like C#).
-     */
-    public static inline function roundToInt64(value:Float):Int64 {
-        var rounded = value >= 0 ? Math.floor(value + 0.5) : Math.ceil(value - 0.5);
-        return Int64.fromFloat(rounded);
+    // Legacy helper methods that delegate to ClipperInt64
+    public static inline function toFloat(v:ClipperInt64):Float {
+        return v.toFloat();
     }
 
-    /**
-     * Round to Int64 using MidpointRounding.ToEven (banker's rounding).
-     */
-    public static function roundToEvenInt64(value:Float):Int64 {
-        var rounded = Math.round(value);
-        // Check if exactly at midpoint
-        if (Math.abs(value - Math.floor(value) - 0.5) < 1e-10) {
-            // Round to even
-            var floor = Math.floor(value);
-            if (Std.int(floor) % 2 == 0) {
-                rounded = floor;
-            } else {
-                rounded = Math.ceil(value);
-            }
-        }
-        return Int64.fromFloat(rounded);
+    public static inline function abs64(v:ClipperInt64):ClipperInt64 {
+        return v.abs();
+    }
+
+    public static inline function roundToInt64(value:Float):ClipperInt64 {
+        return ClipperInt64.roundFromFloat(value);
+    }
+
+    public static inline function roundToEvenInt64(value:Float):ClipperInt64 {
+        return ClipperInt64.roundEvenFromFloat(value);
+    }
+
+    public static inline function triSign(x:ClipperInt64):Int {
+        return x.triSign();
+    }
+
+    public static inline function min64(a:ClipperInt64, b:ClipperInt64):ClipperInt64 {
+        return ClipperInt64.min(a, b);
+    }
+
+    public static inline function max64(a:ClipperInt64, b:ClipperInt64):ClipperInt64 {
+        return ClipperInt64.max(a, b);
     }
 
     /**
@@ -638,32 +966,11 @@ class InternalClipper {
     }
 
     /**
-     * Returns -1, 0, or 1 based on sign.
-     */
-    public static inline function triSign(x:Int64):Int {
-        return if (x < 0) -1 else if (x > 0) 1 else 0;
-    }
-
-    /**
-     * Min of two Int64 values.
-     */
-    public static inline function min64(a:Int64, b:Int64):Int64 {
-        return if (a < b) a else b;
-    }
-
-    /**
-     * Max of two Int64 values.
-     */
-    public static inline function max64(a:Int64, b:Int64):Int64 {
-        return if (a > b) a else b;
-    }
-
-    /**
      * Cross product of three points (returns double to avoid overflow).
      */
     public static inline function crossProduct(pt1:Point64, pt2:Point64, pt3:Point64):Float {
-        return (toFloat(pt2.x) - toFloat(pt1.x)) * (toFloat(pt3.y) - toFloat(pt2.y)) -
-               (toFloat(pt2.y) - toFloat(pt1.y)) * (toFloat(pt3.x) - toFloat(pt2.x));
+        return (pt2.x.toFloat() - pt1.x.toFloat()) * (pt3.y.toFloat() - pt2.y.toFloat()) -
+               (pt2.y.toFloat() - pt1.y.toFloat()) * (pt3.x.toFloat() - pt2.x.toFloat());
     }
 
     /**
@@ -675,11 +982,11 @@ class InternalClipper {
         var c = pt2.y - pt1.y;
         var d = pt3.x - pt2.x;
 
-        var ab = multiplyUInt64(abs64(a), abs64(b));
-        var cd = multiplyUInt64(abs64(c), abs64(d));
+        var ab = multiplyUInt64(a.abs(), b.abs());
+        var cd = multiplyUInt64(c.abs(), d.abs());
 
-        var signAB = triSign(a) * triSign(b);
-        var signCD = triSign(c) * triSign(d);
+        var signAB = a.triSign() * b.triSign();
+        var signCD = c.triSign() * d.triSign();
 
         if (signAB == signCD) {
             var result:Int;
@@ -697,39 +1004,63 @@ class InternalClipper {
     /**
      * Multiply two 64-bit unsigned integers to get 128-bit result.
      */
-    public static function multiplyUInt64(a:Int64, b:Int64):UInt128 {
-        // Use 32-bit multiplication with carry
-        var aRaw:haxe.Int64 = a;
-        var bRaw:haxe.Int64 = b;
-        var aLo:haxe.Int64 = haxe.Int64.make(0, aRaw.low & 0xFFFFFFFF);
-        var aHi:haxe.Int64 = haxe.Int64.make(0, aRaw.high & 0xFFFFFFFF);
-        var bLo:haxe.Int64 = haxe.Int64.make(0, bRaw.low & 0xFFFFFFFF);
-        var bHi:haxe.Int64 = haxe.Int64.make(0, bRaw.high & 0xFFFFFFFF);
-
-        var x1 = aLo * bLo;
-        var x2 = aHi * bLo + (x1 >>> 32);
-        var x3 = aLo * bHi + (x2 & haxe.Int64.make(0, 0xFFFFFFFF));
-
+    #if clipper_int64_as_float64
+    public static function multiplyUInt64(a:ClipperInt64, b:ClipperInt64):UInt128 {
+        // For Float mode: use simpler multiplication
+        // This may lose precision for very large values, but is acceptable for JS performance
         var result = new UInt128();
-        result.lo64 = ((x3 & haxe.Int64.make(0, 0xFFFFFFFF)) << 32) | (x1 & haxe.Int64.make(0, 0xFFFFFFFF));
-        result.hi64 = aHi * bHi + (x2 >>> 32) + (x3 >>> 32);
+        var product = a.toFloat() * b.toFloat();
+        // Store the result - for comparison purposes we just need consistent ordering
+        result.lo64 = ClipperInt64.fromFloat(product % 18446744073709551616.0);
+        result.hi64 = ClipperInt64.fromFloat(product / 18446744073709551616.0);
         return result;
     }
+    #else
+    public static function multiplyUInt64(a:ClipperInt64, b:ClipperInt64):UInt128 {
+        // Use 32-bit multiplication with carry
+        var aLo:ClipperInt64 = ClipperInt64.make(0, a.getLow() & 0xFFFFFFFF);
+        var aHi:ClipperInt64 = ClipperInt64.make(0, a.getHigh() & 0xFFFFFFFF);
+        var bLo:ClipperInt64 = ClipperInt64.make(0, b.getLow() & 0xFFFFFFFF);
+        var bHi:ClipperInt64 = ClipperInt64.make(0, b.getHigh() & 0xFFFFFFFF);
+
+        var x1 = aLo * bLo;
+
+        // For shift operations, we need to use haxe.Int64 directly
+        var x1Raw:haxe.Int64 = cast x1;
+        var x1Shifted:ClipperInt64 = cast(x1Raw >>> 32);
+        var x2 = aHi * bLo + x1Shifted;
+
+        var x2Raw:haxe.Int64 = cast x2;
+        var mask:haxe.Int64 = haxe.Int64.make(0, 0xFFFFFFFF);
+        var x2Masked:ClipperInt64 = cast(x2Raw & mask);
+        var x3 = aLo * bHi + x2Masked;
+
+        var result = new UInt128();
+        var x3Raw:haxe.Int64 = cast x3;
+        var x1Raw2:haxe.Int64 = cast x1;
+        result.lo64 = cast(((x3Raw & mask) << 32) | (x1Raw2 & mask));
+
+        var x2Shifted:ClipperInt64 = cast(x2Raw >>> 32);
+        var x3Shifted:ClipperInt64 = cast(x3Raw >>> 32);
+        result.hi64 = aHi * bHi + x2Shifted + x3Shifted;
+        return result;
+    }
+    #end
 
     /**
      * Check if products a*b and c*d are equal (using 128-bit precision).
      */
-    public static function productsAreEqual(a:Int64, b:Int64, c:Int64, d:Int64):Bool {
-        var absA = abs64(a);
-        var absB = abs64(b);
-        var absC = abs64(c);
-        var absD = abs64(d);
+    public static function productsAreEqual(a:ClipperInt64, b:ClipperInt64, c:ClipperInt64, d:ClipperInt64):Bool {
+        var absA = a.abs();
+        var absB = b.abs();
+        var absC = c.abs();
+        var absD = d.abs();
 
         var mul_ab = multiplyUInt64(absA, absB);
         var mul_cd = multiplyUInt64(absC, absD);
 
-        var sign_ab = triSign(a) * triSign(b);
-        var sign_cd = triSign(c) * triSign(d);
+        var sign_ab = a.triSign() * b.triSign();
+        var sign_cd = c.triSign() * d.triSign();
 
         return mul_ab.lo64 == mul_cd.lo64 && mul_ab.hi64 == mul_cd.hi64 && sign_ab == sign_cd;
     }
@@ -749,8 +1080,8 @@ class InternalClipper {
      * Dot product of three points.
      */
     public static inline function dotProduct(pt1:Point64, pt2:Point64, pt3:Point64):Float {
-        return (toFloat(pt2.x) - toFloat(pt1.x)) * (toFloat(pt3.x) - toFloat(pt2.x)) +
-               (toFloat(pt2.y) - toFloat(pt1.y)) * (toFloat(pt3.y) - toFloat(pt2.y));
+        return (pt2.x.toFloat() - pt1.x.toFloat()) * (pt3.x.toFloat() - pt2.x.toFloat()) +
+               (pt2.y.toFloat() - pt1.y.toFloat()) * (pt3.y.toFloat() - pt2.y.toFloat());
     }
 
     /**
@@ -768,11 +1099,11 @@ class InternalClipper {
     }
 
     /**
-     * Check cast to Int64, returns Invalid64 if out of range.
+     * Check cast to ClipperInt64, returns Invalid64 if out of range.
      */
-    public static inline function checkCastInt64(val:Float):Int64 {
+    public static inline function checkCastInt64(val:Float):ClipperInt64 {
         if (val >= maxCoordFloat || val <= minCoordFloat) return invalid64;
-        return roundToInt64(val);
+        return ClipperInt64.roundFromFloat(val);
     }
 
     /**
@@ -780,17 +1111,17 @@ class InternalClipper {
      * Returns true if lines are non-parallel. ip is constrained to seg1.
      */
     public static function getLineIntersectPt64(ln1a:Point64, ln1b:Point64, ln2a:Point64, ln2b:Point64):{ip:Point64, success:Bool} {
-        var dy1 = toFloat(ln1b.y) - toFloat(ln1a.y);
-        var dx1 = toFloat(ln1b.x) - toFloat(ln1a.x);
-        var dy2 = toFloat(ln2b.y) - toFloat(ln2a.y);
-        var dx2 = toFloat(ln2b.x) - toFloat(ln2a.x);
+        var dy1 = ln1b.y.toFloat() - ln1a.y.toFloat();
+        var dx1 = ln1b.x.toFloat() - ln1a.x.toFloat();
+        var dy2 = ln2b.y.toFloat() - ln2a.y.toFloat();
+        var dx2 = ln2b.x.toFloat() - ln2a.x.toFloat();
         var det = dy1 * dx2 - dy2 * dx1;
 
         if (det == 0.0) {
             return {ip: new Point64(0, 0), success: false};
         }
 
-        var t = ((toFloat(ln1a.x) - toFloat(ln2a.x)) * dy2 - (toFloat(ln1a.y) - toFloat(ln2a.y)) * dx2) / det;
+        var t = ((ln1a.x.toFloat() - ln2a.x.toFloat()) * dy2 - (ln1a.y.toFloat() - ln2a.y.toFloat()) * dx2) / det;
         var ip:Point64;
         if (t <= 0.0) {
             ip = Point64.copy(ln1a);
@@ -798,8 +1129,8 @@ class InternalClipper {
             ip = Point64.copy(ln1b);
         } else {
             ip = new Point64(
-                Int64.fromFloat(toFloat(ln1a.x) + t * dx1),
-                Int64.fromFloat(toFloat(ln1a.y) + t * dy1)
+                ClipperInt64.fromFloat(ln1a.x.toFloat() + t * dx1),
+                ClipperInt64.fromFloat(ln1a.y.toFloat() + t * dy1)
                 #if clipper_usingz
                 , 0
                 #end
@@ -844,32 +1175,32 @@ class InternalClipper {
      * Check if two segments intersect.
      */
     public static function segsIntersect(seg1a:Point64, seg1b:Point64, seg2a:Point64, seg2b:Point64, inclusive:Bool = false):Bool {
-        var dy1 = toFloat(seg1b.y) - toFloat(seg1a.y);
-        var dx1 = toFloat(seg1b.x) - toFloat(seg1a.x);
-        var dy2 = toFloat(seg2b.y) - toFloat(seg2a.y);
-        var dx2 = toFloat(seg2b.x) - toFloat(seg2a.x);
+        var dy1 = seg1b.y.toFloat() - seg1a.y.toFloat();
+        var dx1 = seg1b.x.toFloat() - seg1a.x.toFloat();
+        var dy2 = seg2b.y.toFloat() - seg2a.y.toFloat();
+        var dx2 = seg2b.x.toFloat() - seg2a.x.toFloat();
         var cp = dy1 * dx2 - dy2 * dx1;
         if (cp == 0) return false; // parallel segments
 
         if (inclusive) {
-            var t = (toFloat(seg1a.x) - toFloat(seg2a.x)) * dy2 - (toFloat(seg1a.y) - toFloat(seg2a.y)) * dx2;
+            var t = (seg1a.x.toFloat() - seg2a.x.toFloat()) * dy2 - (seg1a.y.toFloat() - seg2a.y.toFloat()) * dx2;
             if (t == 0) return true;
             if (t > 0) {
                 if (cp < 0 || t > cp) return false;
             } else if (cp > 0 || t < cp) return false;
 
-            t = (toFloat(seg1a.x) - toFloat(seg2a.x)) * dy1 - (toFloat(seg1a.y) - toFloat(seg2a.y)) * dx1;
+            t = (seg1a.x.toFloat() - seg2a.x.toFloat()) * dy1 - (seg1a.y.toFloat() - seg2a.y.toFloat()) * dx1;
             if (t == 0) return true;
             if (t > 0) return (cp > 0 && t <= cp);
             else return (cp < 0 && t >= cp);
         } else {
-            var t = (toFloat(seg1a.x) - toFloat(seg2a.x)) * dy2 - (toFloat(seg1a.y) - toFloat(seg2a.y)) * dx2;
+            var t = (seg1a.x.toFloat() - seg2a.x.toFloat()) * dy2 - (seg1a.y.toFloat() - seg2a.y.toFloat()) * dx2;
             if (t == 0) return false;
             if (t > 0) {
                 if (cp < 0 || t >= cp) return false;
             } else if (cp > 0 || t <= cp) return false;
 
-            t = (toFloat(seg1a.x) - toFloat(seg2a.x)) * dy1 - (toFloat(seg1a.y) - toFloat(seg2a.y)) * dx1;
+            t = (seg1a.x.toFloat() - seg2a.x.toFloat()) * dy1 - (seg1a.y.toFloat() - seg2a.y.toFloat()) * dx1;
             if (t == 0) return false;
             if (t > 0) return (cp > 0 && t < cp);
             else return (cp < 0 && t > cp);
@@ -896,16 +1227,16 @@ class InternalClipper {
      */
     public static function getClosestPtOnSegment(offPt:Point64, seg1:Point64, seg2:Point64):Point64 {
         if (seg1.x == seg2.x && seg1.y == seg2.y) return Point64.copy(seg1);
-        var dx = toFloat(seg2.x) - toFloat(seg1.x);
-        var dy = toFloat(seg2.y) - toFloat(seg1.y);
-        var q = ((toFloat(offPt.x) - toFloat(seg1.x)) * dx +
-                 (toFloat(offPt.y) - toFloat(seg1.y)) * dy) / (dx * dx + dy * dy);
+        var dx = seg2.x.toFloat() - seg1.x.toFloat();
+        var dy = seg2.y.toFloat() - seg1.y.toFloat();
+        var q = ((offPt.x.toFloat() - seg1.x.toFloat()) * dx +
+                 (offPt.y.toFloat() - seg1.y.toFloat()) * dy) / (dx * dx + dy * dy);
         if (q < 0) q = 0;
         else if (q > 1) q = 1;
         // Use MidpointRounding.ToEven to match C++ nearbyint behavior
         return new Point64(
-            roundToEvenInt64(toFloat(seg1.x) + q * dx),
-            roundToEvenInt64(toFloat(seg1.y) + q * dy)
+            ClipperInt64.roundEvenFromFloat(seg1.x.toFloat() + q * dx),
+            ClipperInt64.roundEvenFromFloat(seg1.y.toFloat() + q * dy)
         );
     }
 
@@ -1008,7 +1339,7 @@ class InternalClipper {
         if (cnt < 3) return 0.0;
         var prevPt = path[cnt - 1];
         for (pt in path) {
-            a += (toFloat(prevPt.y) + toFloat(pt.y)) * (toFloat(prevPt.x) - toFloat(pt.x));
+            a += (prevPt.y.toFloat() + pt.y.toFloat()) * (prevPt.x.toFloat() - pt.x.toFloat());
             prevPt = pt;
         }
         return a * 0.5;
@@ -1029,7 +1360,7 @@ class InternalClipper {
     /**
      * Set Z coordinate for all points in a path.
      */
-    public static function setZ(path:Path64, z:Int64):Path64 {
+    public static function setZ(path:Path64, z:ClipperInt64):Path64 {
         var result = new Path64();
         for (pt in path) {
             result.push(new Point64(pt.x, pt.y, z));

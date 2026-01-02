@@ -1,6 +1,5 @@
 package clipper;
 
-import haxe.Int64;
 import clipper.internal.ClipperCore;
 
 // ============================================================================
@@ -185,7 +184,7 @@ class HorzJoin {
 class Active {
     public var bot:Point64;
     public var top:Point64;
-    public var curX:Int64;
+    public var curX:ClipperInt64;
     public var dx:Float;
     public var windDx:Int;
     public var windCount:Int;
@@ -205,7 +204,7 @@ class Active {
     public function new() {
         bot = new Point64(0, 0);
         top = new Point64(0, 0);
-        curX = Int64.ofInt(0);
+        curX = ClipperInt64.ofInt(0);
         dx = 0.0;
         windDx = 0;
         windCount = 0;
@@ -236,11 +235,11 @@ class ClipperBase {
     private var _intersectList:Array<IntersectNode>;
     private var _vertexList:Array<Vertex>;
     private var _outrecList:Array<OutRec>;
-    private var _scanlineList:Array<Int64>;
+    private var _scanlineList:Array<ClipperInt64>;
     private var _horzSegList:Array<HorzSegment>;
     private var _horzJoinList:Array<HorzJoin>;
     private var _currentLocMin:Int;
-    private var _currentBotY:Int64;
+    private var _currentBotY:ClipperInt64;
     private var _isSortedMinimaList:Bool;
     private var _hasOpenPaths:Bool;
     public var _using_polytree:Bool;
@@ -249,7 +248,7 @@ class ClipperBase {
     public var reverseSolution:Bool;
 
     #if clipper_usingz
-    public var defaultZ:Int64;
+    public var defaultZ:ClipperInt64;
     private var _zCallback:Null<(Point64, Point64, Point64, Point64, Point64) -> Void>;
     #end
 
@@ -258,7 +257,7 @@ class ClipperBase {
         _intersectList = new Array<IntersectNode>();
         _vertexList = new Array<Vertex>();
         _outrecList = new Array<OutRec>();
-        _scanlineList = new Array<Int64>();
+        _scanlineList = new Array<ClipperInt64>();
         _horzSegList = new Array<HorzSegment>();
         _horzJoinList = new Array<HorzJoin>();
         _cliptype = ClipType.NoClip;
@@ -266,7 +265,7 @@ class ClipperBase {
         _actives = null;
         _sel = null;
         _currentLocMin = 0;
-        _currentBotY = Int64.ofInt(0);
+        _currentBotY = ClipperInt64.ofInt(0);
         _isSortedMinimaList = false;
         _hasOpenPaths = false;
         _using_polytree = false;
@@ -274,7 +273,7 @@ class ClipperBase {
         preserveCollinear = true;
         reverseSolution = false;
         #if clipper_usingz
-        defaultZ = Int64.ofInt(0);
+        defaultZ = ClipperInt64.ofInt(0);
         _zCallback = null;
         #end
     }
@@ -318,7 +317,7 @@ class ClipperBase {
         return if (pt2.x > pt1.x) Math.NEGATIVE_INFINITY else Math.POSITIVE_INFINITY;
     }
 
-    private static function topX(ae:Active, currentY:Int64):Int64 {
+    private static function topX(ae:Active, currentY:ClipperInt64):ClipperInt64 {
         if (currentY == ae.top.y || ae.top.x == ae.bot.x) return ae.top.x;
         if (currentY == ae.bot.y) return ae.bot.x;
         return ae.bot.x + InternalClipper.roundToEvenInt64(ae.dx * InternalClipper.toFloat(currentY - ae.bot.y));
@@ -614,14 +613,14 @@ class ClipperBase {
             i--;
         }
 
-        _currentBotY = Int64.ofInt(0);
+        _currentBotY = ClipperInt64.ofInt(0);
         _currentLocMin = 0;
         _actives = null;
         _sel = null;
         _succeeded = true;
     }
 
-    private function insertScanline(y:Int64):Void {
+    private function insertScanline(y:ClipperInt64):Void {
         var lo = 0;
         var hi = _scanlineList.length;
         while (lo < hi) {
@@ -636,10 +635,10 @@ class ClipperBase {
         _scanlineList.insert(lo, y);
     }
 
-    private function popScanline():{y:Int64, success:Bool} {
+    private function popScanline():{y:ClipperInt64, success:Bool} {
         var cnt = _scanlineList.length - 1;
         if (cnt < 0) {
-            return {y: Int64.ofInt(0), success: false};
+            return {y: ClipperInt64.ofInt(0), success: false};
         }
 
         var y = _scanlineList[cnt];
@@ -652,7 +651,7 @@ class ClipperBase {
         return {y: y, success: true};
     }
 
-    private inline function hasLocMinAtY(y:Int64):Bool {
+    private inline function hasLocMinAtY(y:ClipperInt64):Bool {
         return _currentLocMin < _minimaList.length && _minimaList[_currentLocMin].vertex.pt.y == y;
     }
 
@@ -893,7 +892,7 @@ class ClipperBase {
         ae.nextInAEL = ae2;
     }
 
-    private function insertLocalMinimaIntoAEL(botY:Int64):Void {
+    private function insertLocalMinimaIntoAEL(botY:ClipperInt64):Void {
         while (hasLocMinAtY(botY)) {
             var localMinima = popLocalMinima();
             var leftBound:Null<Active>;
@@ -1478,7 +1477,7 @@ class ClipperBase {
             outrec.pts : outrec.pts.next;
     }
 
-    private static function resetHorzDirection(horz:Active, vertexMax:Null<Vertex>):{leftX:Int64, rightX:Int64, isLeftToRight:Bool} {
+    private static function resetHorzDirection(horz:Active, vertexMax:Null<Vertex>):{leftX:ClipperInt64, rightX:ClipperInt64, isLeftToRight:Bool} {
         if (horz.bot.x == horz.top.x) {
             var ae = horz.nextInAEL;
             while (ae != null && ae.vertexTop != vertexMax)
@@ -1602,7 +1601,7 @@ class ClipperBase {
         updateEdgeIntoAEL(horz);
     }
 
-    private function doTopOfScanbeam(y:Int64):Void {
+    private function doTopOfScanbeam(y:ClipperInt64):Void {
         _sel = null;
         var ae = _actives;
         while (ae != null) {
@@ -1671,7 +1670,7 @@ class ClipperBase {
         return (prevE != null ? prevE.nextInAEL : _actives);
     }
 
-    private function adjustCurrXAndCopyToSEL(topY:Int64):Void {
+    private function adjustCurrXAndCopyToSEL(topY:ClipperInt64):Void {
         var ae = _actives;
         _sel = ae;
         while (ae != null) {
@@ -1683,13 +1682,13 @@ class ClipperBase {
         }
     }
 
-    private function doIntersections(topY:Int64):Void {
+    private function doIntersections(topY:ClipperInt64):Void {
         if (!buildIntersectList(topY)) return;
         processIntersectList();
         disposeIntersectNodes();
     }
 
-    private function addNewIntersectNode(ae1:Active, ae2:Active, topY:Int64):Void {
+    private function addNewIntersectNode(ae1:Active, ae2:Active, topY:ClipperInt64):Void {
         var ipResult = InternalClipper.getLineIntersectPt64(ae1.bot, ae1.top, ae2.bot, ae2.top);
         var ip:Point64;
         if (!ipResult.success)
@@ -1739,7 +1738,7 @@ class ClipperBase {
         ae2.prevInSEL = ae1;
     }
 
-    private function buildIntersectList(topY:Int64):Bool {
+    private function buildIntersectList(topY:ClipperInt64):Bool {
         if (_actives == null || _actives.nextInAEL == null) return false;
 
         adjustCurrXAndCopyToSEL(topY);

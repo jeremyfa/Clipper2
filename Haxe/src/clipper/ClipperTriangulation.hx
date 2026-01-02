@@ -1,6 +1,6 @@
 package clipper;
 
-import haxe.Int64;
+
 import clipper.internal.ClipperCore;
 
 /**
@@ -567,7 +567,7 @@ class Delaunay {
 
     private function horizontalBetween(v1:Vertex2, v2:Vertex2):Null<Edge> {
         var y = v1.pt.y;
-        var l:Int64, r:Int64;
+        var l:ClipperInt64, r:ClipperInt64;
 
         if (v1.pt.x > v2.pt.x) {
             l = v2.pt.x;
@@ -589,7 +589,7 @@ class Delaunay {
         return res;
     }
 
-    private function doTriangulateLeft(edge:Edge, pivot:Vertex2, minY:Int64):Void {
+    private function doTriangulateLeft(edge:Edge, pivot:Vertex2, minY:ClipperInt64):Void {
         var vAlt:Null<Vertex2> = null;
         var eAlt:Null<Edge> = null;
 
@@ -634,7 +634,7 @@ class Delaunay {
             doTriangulateLeft(eX, vAlt, minY);
     }
 
-    private function doTriangulateRight(edge:Edge, pivot:Vertex2, minY:Int64):Void {
+    private function doTriangulateRight(edge:Edge, pivot:Vertex2, minY:ClipperInt64):Void {
         var vAlt:Null<Vertex2> = null;
         var eAlt:Null<Edge> = null;
 

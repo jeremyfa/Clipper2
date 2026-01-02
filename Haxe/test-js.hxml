@@ -2,4 +2,5 @@
 -cp test
 -main test.TestRunner
 -js bin/test-js/tests.js
+-D clipper_int64_as_float64
 --cmd node bin/test-js/tests.js

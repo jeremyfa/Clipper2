@@ -1,6 +1,6 @@
 package clipper;
 
-import haxe.Int64;
+
 import clipper.internal.ClipperCore;
 
 // ============================================================================
