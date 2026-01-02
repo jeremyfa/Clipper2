@@ -60,7 +60,46 @@ class TestRunner {
     static function testInt64():Void {
         trace("Testing ClipperInt64...");
 
-        // Basic operations
+        // === Construction & Conversion ===
+
+        // ofInt
+        var zero:ClipperInt64 = 0;
+        var pos:ClipperInt64 = 100;
+        var neg:ClipperInt64 = -100;
+        assertTrue(zero == 0, "ofInt zero");
+        assertTrue(pos == 100, "ofInt positive");
+        assertTrue(neg == -100, "ofInt negative");
+
+        // fromFloat - must truncate towards zero (not store fractional values)
+        var fromF = ClipperInt64.fromFloat(123.7);
+        assertTrue(!Math.isNaN(fromF.toFloat()), "fromFloat not NaN");
+        assertTrue(fromF.toFloat() == 123.0, "fromFloat truncates positive");
+        var fromFNeg = ClipperInt64.fromFloat(-123.7);
+        assertTrue(fromFNeg.toFloat() == -123.0, "fromFloat truncates negative towards zero");
+        var fromFExact = ClipperInt64.fromFloat(456.0);
+        assertTrue(fromFExact.toFloat() == 456.0, "fromFloat preserves exact integers");
+        // Test with values that caused infinite loop bug (fractional coordinates)
+        var fracVal = ClipperInt64.fromFloat(14683544.942772454);
+        assertTrue(fracVal.toFloat() == 14683544.0, "fromFloat truncates fractional coordinate");
+
+        // make(high, low)
+        var made = ClipperInt64.make(0, 100);
+        assertTrue(made == 100, "make(0, 100)");
+        assertTrue(!Math.isNaN(made.toFloat()), "make not NaN");
+
+        var madeNegLow = ClipperInt64.make(0, -1);
+        assertTrue(!Math.isNaN(madeNegLow.toFloat()), "make with negative low not NaN");
+
+        // toFloat round-trip
+        var val:ClipperInt64 = 12345;
+        assertTrue(val.toFloat() == 12345.0, "toFloat accuracy");
+
+        // toInt
+        var bigVal:ClipperInt64 = 100;
+        assertTrue(bigVal.toInt() == 100, "toInt");
+
+        // === Arithmetic - Basic ===
+
         var a:ClipperInt64 = 100;
         var b:ClipperInt64 = 50;
 
@@ -69,18 +108,104 @@ class TestRunner {
         assertTrue(a * b == 5000, "Int64 multiplication");
         assertTrue(a / b == 2, "Int64 division");
 
-        // Comparison
+        // === Arithmetic - Division Edge Cases ===
+
+        var one:ClipperInt64 = 1;
+        var negOne:ClipperInt64 = -1;
+        var zeroVal:ClipperInt64 = 0;
+
+        // Normal division
+        assertTrue(a / one == 100, "100 / 1 = 100");
+        assertTrue(a / negOne == -100, "100 / -1 = -100");
+
+        // Note: Division/modulo by zero is undefined behavior
+        // - Float mode: div by zero → Infinity, mod by zero → NaN
+        // - Int64 mode: throws exception
+        // We skip these tests as they're platform-dependent
+
+        // === Arithmetic - Modulo Edge Cases ===
+
+        assertTrue(a % b == 0, "100 % 50 = 0");
+        var a1:ClipperInt64 = 101;
+        assertTrue(a1 % b == 1, "101 % 50 = 1");
+
+        // Negative modulo
+        var negMod = neg % b;
+        assertTrue(!Math.isNaN(negMod.toFloat()), "Negative modulo not NaN");
+
+        // === getHigh / getLow ===
+
+        var testVal:ClipperInt64 = 100;
+        var highPart = testVal.getHigh();
+        var lowPart = testVal.getLow();
+        assertTrue(highPart == 0, "getHigh for small value");
+        assertTrue(lowPart == 100, "getLow for small value");
+
+        var negVal:ClipperInt64 = -100;
+        var negHigh = negVal.getHigh();
+        var negLow = negVal.getLow();
+        // Check they don't return NaN-like values (NaN != NaN)
+        assertTrue(negHigh == negHigh, "getHigh for negative not NaN");
+        assertTrue(negLow == negLow, "getLow for negative not NaN");
+
+        // === abs ===
+
+        assertTrue(pos.abs() == 100, "abs positive");
+        assertTrue(neg.abs() == 100, "abs negative");
+        assertTrue(zero.abs() == 0, "abs zero");
+
+        // === min / max ===
+
+        assertTrue(ClipperInt64.min(a, b) == 50, "min(100, 50)");
+        assertTrue(ClipperInt64.max(a, b) == 100, "max(100, 50)");
+        assertTrue(ClipperInt64.min(a, a) == 100, "min equal values");
+        assertTrue(ClipperInt64.max(neg, pos) == 100, "max with negative");
+
+        // === triSign ===
+
+        assertTrue(pos.triSign() == 1, "triSign positive");
+        assertTrue(neg.triSign() == -1, "triSign negative");
+        assertTrue(zero.triSign() == 0, "triSign zero");
+
+        // === roundFromFloat ===
+
+        var rounded1 = ClipperInt64.roundFromFloat(2.4);
+        var rounded2 = ClipperInt64.roundFromFloat(2.5);
+        var rounded3 = ClipperInt64.roundFromFloat(2.6);
+        var rounded4 = ClipperInt64.roundFromFloat(-2.5);
+
+        assertTrue(!Math.isNaN(rounded1.toFloat()), "roundFromFloat 2.4 not NaN");
+        assertTrue(rounded1 == 2, "roundFromFloat 2.4 = 2");
+        assertTrue(rounded2 == 3, "roundFromFloat 2.5 = 3 (away from zero)");
+        assertTrue(rounded3 == 3, "roundFromFloat 2.6 = 3");
+        assertTrue(rounded4 == -3, "roundFromFloat -2.5 = -3 (away from zero)");
+
+        // === roundEvenFromFloat (banker's rounding) ===
+
+        var even1 = ClipperInt64.roundEvenFromFloat(2.5);
+        var even2 = ClipperInt64.roundEvenFromFloat(3.5);
+        var even3 = ClipperInt64.roundEvenFromFloat(4.5);
+
+        assertTrue(!Math.isNaN(even1.toFloat()), "roundEvenFromFloat 2.5 not NaN");
+        assertTrue(even1 == 2, "roundEvenFromFloat 2.5 = 2 (to even)");
+        assertTrue(even2 == 4, "roundEvenFromFloat 3.5 = 4 (to even)");
+        assertTrue(even3 == 4, "roundEvenFromFloat 4.5 = 4 (to even)");
+
+        // === Comparison operators ===
+
         assertTrue(a > b, "Int64 greater than");
         assertTrue(b < a, "Int64 less than");
         assertTrue(a >= 100, "Int64 greater than or equal");
         assertTrue(b <= 50, "Int64 less than or equal");
+        assertTrue(a == 100, "100 == 100");
+        assertTrue(a != 99, "100 != 99");
 
         // Negative numbers
         var c:ClipperInt64 = -100;
         assertTrue(c < 0, "Int64 negative less than zero");
-        assertTrue(InternalClipper.abs64(c) == 100, "Int64 abs");
+        assertTrue(InternalClipper.abs64(c) == 100, "Int64 abs via InternalClipper");
 
-        trace("Int64 tests complete.");
+        trace("ClipperInt64 tests complete.");
     }
 
     static function testPoint64():Void {
