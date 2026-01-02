@@ -141,7 +141,7 @@ class ClipperMinkowski {
     private static function scalePath64(path:PathD, scale:Float):Path64 {
         var result = new Path64();
         for (pt in path) {
-            result.push(new Point64(Std.int(pt.x * scale), Std.int(pt.y * scale)));
+            result.push(Point64.get(Std.int(pt.x * scale), Std.int(pt.y * scale)));
         }
         return result;
     }
@@ -154,7 +154,7 @@ class ClipperMinkowski {
         for (path in paths) {
             var pathD = new PathD();
             for (pt in path) {
-                pathD.push(new PointD(InternalClipper.toFloat(pt.x) * scale, InternalClipper.toFloat(pt.y) * scale));
+                pathD.push(PointD.get(InternalClipper.toFloat(pt.x) * scale, InternalClipper.toFloat(pt.y) * scale));
             }
             result.push(pathD);
         }

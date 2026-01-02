@@ -45,6 +45,20 @@ class Vertex {
         this.next = null;
         this.prev = prev;
     }
+
+    public static function get(pt:Point64, flags:VertexFlags, prev:Null<Vertex>):Vertex {
+        var v = ClipperPool.acquireVertex();
+        if (v != null) {
+            v.pt = pt;
+            v.flags = flags;
+            v.next = null;
+            v.prev = prev;
+        } else {
+            v = new Vertex(pt, flags, prev);
+        }
+        ClipperPool.trackVertex(v);
+        return v;
+    }
 }
 
 // ============================================================================
@@ -60,6 +74,19 @@ class LocalMinima {
         this.vertex = vertex;
         this.polytype = polytype;
         this.isOpen = isOpen;
+    }
+
+    public static function get(vertex:Vertex, polytype:PathType, isOpen:Bool = false):LocalMinima {
+        var lm = ClipperPool.acquireLocalMinima();
+        if (lm != null) {
+            lm.vertex = vertex;
+            lm.polytype = polytype;
+            lm.isOpen = isOpen;
+        } else {
+            lm = new LocalMinima(vertex, polytype, isOpen);
+        }
+        ClipperPool.trackLocalMinima(lm);
+        return lm;
     }
 
     public static function compare(lm1:LocalMinima, lm2:LocalMinima):Int {
@@ -86,6 +113,19 @@ class IntersectNode {
         this.edge2 = edge2;
     }
 
+    public static function get(pt:Point64, edge1:Active, edge2:Active):IntersectNode {
+        var node = ClipperPool.acquireIntersectNode();
+        if (node != null) {
+            node.pt = pt;
+            node.edge1 = edge1;
+            node.edge2 = edge2;
+        } else {
+            node = new IntersectNode(pt, edge1, edge2);
+        }
+        ClipperPool.trackIntersectNode(node);
+        return node;
+    }
+
     public static function compare(a:IntersectNode, b:IntersectNode):Int {
         if (a.pt.y != b.pt.y) return (a.pt.y > b.pt.y) ? -1 : 1;
         if (a.pt.x == b.pt.x) return 0;
@@ -110,6 +150,21 @@ class OutPt {
         this.next = this;
         this.prev = this;
         this.horz = null;
+    }
+
+    public static function get(pt:Point64, outrec:OutRec):OutPt {
+        var op = ClipperPool.acquireOutPt();
+        if (op != null) {
+            op.pt = pt;
+            op.outrec = outrec;
+            op.next = op;
+            op.prev = op;
+            op.horz = null;
+        } else {
+            op = new OutPt(pt, outrec);
+        }
+        ClipperPool.trackOutPt(op);
+        return op;
     }
 }
 
@@ -145,6 +200,31 @@ class OutRec {
         splits = null;
         recursiveSplit = null;
     }
+
+    public static function get():OutRec {
+        var or = ClipperPool.acquireOutRec();
+        if (or != null) {
+            or.idx = 0;
+            or.outPtCount = 0;
+            or.owner = null;
+            or.frontEdge = null;
+            or.backEdge = null;
+            or.pts = null;
+            or.polypath = null;
+            or.bounds.left = 0;
+            or.bounds.top = 0;
+            or.bounds.right = 0;
+            or.bounds.bottom = 0;
+            or.path.resize(0);
+            or.isOpen = false;
+            or.splits = null;
+            or.recursiveSplit = null;
+        } else {
+            or = new OutRec();
+        }
+        ClipperPool.trackOutRec(or);
+        return or;
+    }
 }
 
 // ============================================================================
@@ -161,6 +241,19 @@ class HorzSegment {
         rightOp = null;
         leftToRight = true;
     }
+
+    public static function get(op:OutPt):HorzSegment {
+        var hs = ClipperPool.acquireHorzSegment();
+        if (hs != null) {
+            hs.leftOp = op;
+            hs.rightOp = null;
+            hs.leftToRight = true;
+        } else {
+            hs = new HorzSegment(op);
+        }
+        ClipperPool.trackHorzSegment(hs);
+        return hs;
+    }
 }
 
 // ============================================================================
@@ -174,6 +267,18 @@ class HorzJoin {
     public function new(ltor:OutPt, rtol:OutPt) {
         op1 = ltor;
         op2 = rtol;
+    }
+
+    public static function get(ltor:OutPt, rtol:OutPt):HorzJoin {
+        var hj = ClipperPool.acquireHorzJoin();
+        if (hj != null) {
+            hj.op1 = ltor;
+            hj.op2 = rtol;
+        } else {
+            hj = new HorzJoin(ltor, rtol);
+        }
+        ClipperPool.trackHorzJoin(hj);
+        return hj;
     }
 }
 
@@ -202,8 +307,8 @@ class Active {
     public var joinWith:JoinWith;
 
     public function new() {
-        bot = new Point64(0, 0);
-        top = new Point64(0, 0);
+        bot = Point64.get(0, 0);
+        top = Point64.get(0, 0);
         curX = ClipperInt64.ofInt(0);
         dx = 0.0;
         windDx = 0;
@@ -219,6 +324,34 @@ class Active {
         localMin = null;
         isLeftBound = false;
         joinWith = JoinWith.None;
+    }
+
+    public static function get():Active {
+        var a = ClipperPool.acquireActive();
+        if (a != null) {
+            // MUST allocate new Point64 since old ones were recycled
+            a.bot = Point64.get(0, 0);
+            a.top = Point64.get(0, 0);
+            a.curX = ClipperInt64.ofInt(0);
+            a.dx = 0.0;
+            a.windDx = 0;
+            a.windCount = 0;
+            a.windCount2 = 0;
+            a.outrec = null;
+            a.prevInAEL = null;
+            a.nextInAEL = null;
+            a.prevInSEL = null;
+            a.nextInSEL = null;
+            a.jump = null;
+            a.vertexTop = null;
+            a.localMin = null;
+            a.isLeftBound = false;
+            a.joinWith = JoinWith.None;
+        } else {
+            a = new Active();
+        }
+        ClipperPool.trackActive(a);
+        return a;
     }
 }
 
@@ -504,7 +637,7 @@ class ClipperBase {
     private static function addLocMin(vert:Vertex, polytype:PathType, isOpen:Bool, minimaList:Array<LocalMinima>):Void {
         if ((vert.flags & VertexFlags.LocalMin) != VertexFlags.None) return;
         vert.flags = vert.flags | VertexFlags.LocalMin;
-        var lm = new LocalMinima(vert, polytype, isOpen);
+        var lm = LocalMinima.get(vert, polytype, isOpen);
         minimaList.push(lm);
     }
 
@@ -517,11 +650,11 @@ class ClipperBase {
 
             for (pt in path) {
                 if (v0 == null) {
-                    v0 = new Vertex(pt, VertexFlags.None, null);
+                    v0 = Vertex.get(pt, VertexFlags.None, null);
                     vertexList.push(v0);
                     prev_v = v0;
                 } else if (prev_v.pt != pt) {
-                    curr_v = new Vertex(pt, VertexFlags.None, prev_v);
+                    curr_v = Vertex.get(pt, VertexFlags.None, prev_v);
                     vertexList.push(curr_v);
                     prev_v.next = curr_v;
                     prev_v = curr_v;
@@ -899,7 +1032,7 @@ class ClipperBase {
             if ((localMinima.vertex.flags & VertexFlags.OpenStart) != VertexFlags.None) {
                 leftBound = null;
             } else {
-                leftBound = new Active();
+                leftBound = Active.get();
                 leftBound.bot = localMinima.vertex.pt;
                 leftBound.curX = localMinima.vertex.pt.x;
                 leftBound.windDx = -1;
@@ -914,7 +1047,7 @@ class ClipperBase {
             if ((localMinima.vertex.flags & VertexFlags.OpenEnd) != VertexFlags.None) {
                 rightBound = null;
             } else {
-                rightBound = new Active();
+                rightBound = Active.get();
                 rightBound.bot = localMinima.vertex.pt;
                 rightBound.curX = localMinima.vertex.pt.x;
                 rightBound.windDx = 1;
@@ -1007,7 +1140,7 @@ class ClipperBase {
 
     private function newOutRec():OutRec {
         var idx = _outrecList.length;
-        var result = new OutRec();
+        var result = OutRec.get();
         result.idx = idx;
         _outrecList.push(result);
         return result;
@@ -1045,7 +1178,7 @@ class ClipperBase {
             }
         }
 
-        var op = new OutPt(pt, outrec);
+        var op = OutPt.get(pt, outrec);
         outrec.pts = op;
         outrec.outPtCount = 1;
         return op;
@@ -1142,7 +1275,7 @@ class ClipperBase {
         if (!toFront && pt == opBack.pt)
             return opBack;
 
-        var newOp = new OutPt(pt, outrec);
+        var newOp = OutPt.get(pt, outrec);
         opBack.prev = newOp;
         newOp.prev = opFront;
         newOp.next = opBack;
@@ -1164,7 +1297,7 @@ class ClipperBase {
         }
 
         ae.outrec = outrec;
-        var op = new OutPt(pt, outrec);
+        var op = OutPt.get(pt, outrec);
         outrec.pts = op;
         return op;
     }
@@ -1468,7 +1601,7 @@ class ClipperBase {
 
     private function addToHorzSegList(op:OutPt):Void {
         if (op.outrec.isOpen) return;
-        _horzSegList.push(new HorzSegment(op));
+        _horzSegList.push(HorzSegment.get(op));
     }
 
     private static function getLastOp(hotEdge:Active):OutPt {
@@ -1505,7 +1638,7 @@ class ClipperBase {
         var rightX = horzDir.rightX;
 
         if (isHotEdge(horz)) {
-            var op = addOutPt(horz, new Point64(horz.curX, Y));
+            var op = addOutPt(horz, Point64.get(horz.curX, Y));
             addToHorzSegList(op);
         }
 
@@ -1547,7 +1680,7 @@ class ClipperBase {
                     }
                 }
 
-                pt = new Point64(ae.curX, Y);
+                pt = Point64.get(ae.curX, Y);
 
                 if (isLeftToRight) {
                     intersectEdges(horz, ae, pt);
@@ -1692,7 +1825,7 @@ class ClipperBase {
         var ipResult = InternalClipper.getLineIntersectPt64(ae1.bot, ae1.top, ae2.bot, ae2.top);
         var ip:Point64;
         if (!ipResult.success)
-            ip = new Point64(ae1.curX, topY);
+            ip = Point64.get(ae1.curX, topY);
         else
             ip = ipResult.ip;
 
@@ -1710,16 +1843,16 @@ class ClipperBase {
                 ip = InternalClipper.getClosestPtOnSegment(ip, ae2.bot, ae2.top);
             } else {
                 if (ip.y < topY)
-                    ip = new Point64(ip.x, topY);
+                    ip = Point64.get(ip.x, topY);
                 else
-                    ip = new Point64(ip.x, _currentBotY);
+                    ip = Point64.get(ip.x, _currentBotY);
                 if (absDx1 < absDx2)
-                    ip = new Point64(topX(ae1, ip.y), ip.y);
+                    ip = Point64.get(topX(ae1, ip.y), ip.y);
                 else
-                    ip = new Point64(topX(ae2, ip.y), ip.y);
+                    ip = Point64.get(topX(ae2, ip.y), ip.y);
             }
         }
-        _intersectList.push(new IntersectNode(ip, ae1, ae2));
+        _intersectList.push(IntersectNode.get(ip, ae1, ae2));
     }
 
     private static function extractFromSEL(ae:Active):Null<Active> {
@@ -1899,7 +2032,7 @@ class ClipperBase {
     }
 
     private function duplicateOp(op:OutPt, insertAfter:Bool):OutPt {
-        var result = new OutPt(op.pt, op.outrec);
+        var result = OutPt.get(op.pt, op.outrec);
         if (insertAfter) {
             result.next = op.next;
             result.next.prev = result;
@@ -1942,7 +2075,7 @@ class ClipperBase {
                     while (hs2.leftOp.prev.pt.y == curr_y &&
                         hs2.leftOp.prev.pt.x <= hs1.leftOp.pt.x)
                         hs2.leftOp = hs2.leftOp.prev;
-                    _horzJoinList.push(new HorzJoin(
+                    _horzJoinList.push(HorzJoin.get(
                         duplicateOp(hs1.leftOp, true),
                         duplicateOp(hs2.leftOp, false)));
                 } else {
@@ -1952,7 +2085,7 @@ class ClipperBase {
                     while (hs2.leftOp.next.pt.y == curr_y &&
                         hs2.leftOp.next.pt.x <= hs1.leftOp.pt.x)
                         hs2.leftOp = hs2.leftOp.next;
-                    _horzJoinList.push(new HorzJoin(
+                    _horzJoinList.push(HorzJoin.get(
                         duplicateOp(hs2.leftOp, true),
                         duplicateOp(hs1.leftOp, false)));
                 }
@@ -2202,7 +2335,7 @@ class ClipperBase {
             nextNextOp.prev = prevOp;
             prevOp.next = nextNextOp;
         } else {
-            var newOp2 = new OutPt(ip, outrec);
+            var newOp2 = OutPt.get(ip, outrec);
             newOp2.prev = prevOp;
             newOp2.next = nextNextOp;
             nextNextOp.prev = newOp2;
@@ -2217,7 +2350,7 @@ class ClipperBase {
         splitOp.outrec = newOutRec;
         splitOp.next.outrec = newOutRec;
 
-        var newOp = new OutPt(ip, newOutRec);
+        var newOp = OutPt.get(ip, newOutRec);
         newOp.prev = splitOp.next;
         newOp.next = splitOp;
         newOutRec.pts = newOp;
@@ -2577,7 +2710,7 @@ class ClipperD extends ClipperBase {
     private function scalePathTo64(path:PathD):Path64 {
         var result = new Path64();
         for (pt in path) {
-            result.push(new Point64(
+            result.push(Point64.get(
                 InternalClipper.roundToInt64(pt.x * _scale),
                 InternalClipper.roundToInt64(pt.y * _scale)
             ));
@@ -2595,7 +2728,7 @@ class ClipperD extends ClipperBase {
     private function scalePathToD(path:Path64):PathD {
         var result = new PathD();
         for (pt in path) {
-            result.push(new PointD(
+            result.push(PointD.get(
                 InternalClipper.toFloat(pt.x) * _invScale,
                 InternalClipper.toFloat(pt.y) * _invScale
             ));
@@ -2740,7 +2873,7 @@ class PolyPathD extends PolyPathBase {
         var result = new PathD();
         var invScale = 1.0 / scale;
         for (pt in path) {
-            result.push(new PointD(
+            result.push(PointD.get(
                 InternalClipper.toFloat(pt.x) * invScale,
                 InternalClipper.toFloat(pt.y) * invScale
             ));

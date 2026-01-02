@@ -312,10 +312,10 @@ class Clipper {
         var result = new Path64();
         #if clipper_usingz
         for (pt in path)
-            result.push(new Point64(pt.x + dx, pt.y + dy, pt.z));
+            result.push(Point64.get(pt.x + dx, pt.y + dy, pt.z));
         #else
         for (pt in path)
-            result.push(new Point64(pt.x + dx, pt.y + dy));
+            result.push(Point64.get(pt.x + dx, pt.y + dy));
         #end
         return result;
     }
@@ -337,10 +337,10 @@ class Clipper {
         var result = new PathD();
         #if clipper_usingz
         for (pt in path)
-            result.push(new PointD(pt.x + dx, pt.y + dy, pt.z));
+            result.push(PointD.get(pt.x + dx, pt.y + dy, pt.z));
         #else
         for (pt in path)
-            result.push(new PointD(pt.x + dx, pt.y + dy));
+            result.push(PointD.get(pt.x + dx, pt.y + dy));
         #end
         return result;
     }
@@ -413,10 +413,10 @@ class Clipper {
         var result = new Path64();
         #if clipper_usingz
         for (pt in path)
-            result.push(new Point64(Std.int(InternalClipper.toFloat(pt.x) * scale), Std.int(InternalClipper.toFloat(pt.y) * scale), pt.z));
+            result.push(Point64.get(Std.int(InternalClipper.toFloat(pt.x) * scale), Std.int(InternalClipper.toFloat(pt.y) * scale), pt.z));
         #else
         for (pt in path)
-            result.push(new Point64(Std.int(InternalClipper.toFloat(pt.x) * scale), Std.int(InternalClipper.toFloat(pt.y) * scale)));
+            result.push(Point64.get(Std.int(InternalClipper.toFloat(pt.x) * scale), Std.int(InternalClipper.toFloat(pt.y) * scale)));
         #end
         return result;
     }
@@ -439,10 +439,10 @@ class Clipper {
         var result = new Path64();
         #if clipper_usingz
         for (pt in path)
-            result.push(new Point64(Std.int(pt.x * scale), Std.int(pt.y * scale), pt.z));
+            result.push(Point64.get(Std.int(pt.x * scale), Std.int(pt.y * scale), pt.z));
         #else
         for (pt in path)
-            result.push(new Point64(Std.int(pt.x * scale), Std.int(pt.y * scale)));
+            result.push(Point64.get(Std.int(pt.x * scale), Std.int(pt.y * scale)));
         #end
         return result;
     }
@@ -464,10 +464,10 @@ class Clipper {
         var result = new PathD();
         #if clipper_usingz
         for (pt in path)
-            result.push(new PointD(InternalClipper.toFloat(pt.x) * scale, InternalClipper.toFloat(pt.y) * scale, pt.z));
+            result.push(PointD.get(InternalClipper.toFloat(pt.x) * scale, InternalClipper.toFloat(pt.y) * scale, pt.z));
         #else
         for (pt in path)
-            result.push(new PointD(InternalClipper.toFloat(pt.x) * scale, InternalClipper.toFloat(pt.y) * scale));
+            result.push(PointD.get(InternalClipper.toFloat(pt.x) * scale, InternalClipper.toFloat(pt.y) * scale));
         #end
         return result;
     }
@@ -501,10 +501,10 @@ class Clipper {
         var result = new Path64();
         #if clipper_usingz
         for (pt in path)
-            result.push(new Point64(Std.int(pt.x), Std.int(pt.y), pt.z));
+            result.push(Point64.get(Std.int(pt.x), Std.int(pt.y), pt.z));
         #else
         for (pt in path)
-            result.push(new Point64(Std.int(pt.x), Std.int(pt.y)));
+            result.push(Point64.get(Std.int(pt.x), Std.int(pt.y)));
         #end
         return result;
     }
@@ -526,10 +526,10 @@ class Clipper {
         var result = new PathD();
         #if clipper_usingz
         for (pt in path)
-            result.push(new PointD(InternalClipper.toFloat(pt.x), InternalClipper.toFloat(pt.y), pt.z));
+            result.push(PointD.get(InternalClipper.toFloat(pt.x), InternalClipper.toFloat(pt.y), pt.z));
         #else
         for (pt in path)
-            result.push(new PointD(InternalClipper.toFloat(pt.x), InternalClipper.toFloat(pt.y)));
+            result.push(PointD.get(InternalClipper.toFloat(pt.x), InternalClipper.toFloat(pt.y)));
         #end
         return result;
     }
@@ -619,7 +619,7 @@ class Clipper {
         var len = Std.int(arr.length / 2);
         var result = new Path64();
         for (i in 0...len)
-            result.push(new Point64(arr[i * 2], arr[i * 2 + 1]));
+            result.push(Point64.get(arr[i * 2], arr[i * 2 + 1]));
         return result;
     }
 
@@ -630,7 +630,7 @@ class Clipper {
         var len = Std.int(arr.length / 2);
         var result = new PathD();
         for (i in 0...len)
-            result.push(new PointD(arr[i * 2], arr[i * 2 + 1]));
+            result.push(PointD.get(arr[i * 2], arr[i * 2 + 1]));
         return result;
     }
 
@@ -642,7 +642,7 @@ class Clipper {
         var len = Std.int(arr.length / 3);
         var result = new Path64();
         for (i in 0...len)
-            result.push(new Point64(arr[i * 3], arr[i * 3 + 1], arr[i * 3 + 2]));
+            result.push(Point64.get(arr[i * 3], arr[i * 3 + 1], arr[i * 3 + 2]));
         return result;
     }
 
@@ -653,7 +653,7 @@ class Clipper {
         var len = Std.int(arr.length / 3);
         var result = new PathD();
         for (i in 0...len)
-            result.push(new PointD(arr[i * 3], arr[i * 3 + 1], Std.int(arr[i * 3 + 2])));
+            result.push(PointD.get(arr[i * 3], arr[i * 3 + 1], Std.int(arr[i * 3 + 2])));
         return result;
     }
     #end
@@ -676,14 +676,14 @@ class Clipper {
      * Calculates the midpoint between two Point64 values.
      */
     public static function midPoint(pt1:Point64, pt2:Point64):Point64 {
-        return new Point64((pt1.x + pt2.x) / 2, (pt1.y + pt2.y) / 2);
+        return Point64.get((pt1.x + pt2.x) / 2, (pt1.y + pt2.y) / 2);
     }
 
     /**
      * Calculates the midpoint between two PointD values.
      */
     public static function midPointD(pt1:PointD, pt2:PointD):PointD {
-        return new PointD((pt1.x + pt2.x) / 2, (pt1.y + pt2.y) / 2);
+        return PointD.get((pt1.x + pt2.x) / 2, (pt1.y + pt2.y) / 2);
     }
 
     /**
@@ -779,9 +779,9 @@ class Clipper {
         var co = Math.cos(2 * Math.PI / steps);
         var dx = co, dy = si;
         var result = new Path64();
-        result.push(new Point64(center.x + Std.int(radiusX), center.y));
+        result.push(Point64.get(center.x + Std.int(radiusX), center.y));
         for (i in 1...steps) {
-            result.push(new Point64(center.x + Std.int(radiusX * dx), center.y + Std.int(radiusY * dy)));
+            result.push(Point64.get(center.x + Std.int(radiusX * dx), center.y + Std.int(radiusY * dy)));
             var x = dx * co - dy * si;
             dy = dy * co + dx * si;
             dx = x;
@@ -802,9 +802,9 @@ class Clipper {
         var co = Math.cos(2 * Math.PI / steps);
         var dx = co, dy = si;
         var result = new PathD();
-        result.push(new PointD(center.x + radiusX, center.y));
+        result.push(PointD.get(center.x + radiusX, center.y));
         for (i in 1...steps) {
-            result.push(new PointD(center.x + radiusX * dx, center.y + radiusY * dy));
+            result.push(PointD.get(center.x + radiusX * dx, center.y + radiusY * dy));
             var x = dx * co - dy * si;
             dy = dy * co + dx * si;
             dx = x;

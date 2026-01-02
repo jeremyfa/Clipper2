@@ -239,13 +239,13 @@ class ClipperOffset {
     public static inline function getUnitNormal(pt1:Point64, pt2:Point64):PointD {
         var dx = InternalClipper.toFloat(pt2.x) - InternalClipper.toFloat(pt1.x);
         var dy = InternalClipper.toFloat(pt2.y) - InternalClipper.toFloat(pt1.y);
-        if (dx == 0 && dy == 0) return new PointD(0, 0);
+        if (dx == 0 && dy == 0) return PointD.get(0, 0);
 
         var f = 1.0 / Math.sqrt(dx * dx + dy * dy);
         dx *= f;
         dy *= f;
 
-        return new PointD(dy, -dx);
+        return PointD.get(dy, -dx);
     }
 
     public static function getLowestPathInfo(paths:Paths64):{idx:Int, isNegArea:Bool} {
@@ -273,17 +273,17 @@ class ClipperOffset {
 
     private static inline function translatePoint(pt:PointD, dx:Float, dy:Float):PointD {
         #if clipper_usingz
-        return new PointD(pt.x + dx, pt.y + dy, pt.z);
+        return PointD.get(pt.x + dx, pt.y + dy, pt.z);
         #else
-        return new PointD(pt.x + dx, pt.y + dy);
+        return PointD.get(pt.x + dx, pt.y + dy);
         #end
     }
 
     private static inline function reflectPoint(pt:PointD, pivot:PointD):PointD {
         #if clipper_usingz
-        return new PointD(pivot.x + (pivot.x - pt.x), pivot.y + (pivot.y - pt.y), pt.z);
+        return PointD.get(pivot.x + (pivot.x - pt.x), pivot.y + (pivot.y - pt.y), pt.z);
         #else
-        return new PointD(pivot.x + (pivot.x - pt.x), pivot.y + (pivot.y - pt.y));
+        return PointD.get(pivot.x + (pivot.x - pt.x), pivot.y + (pivot.y - pt.y));
         #end
     }
 
@@ -297,24 +297,24 @@ class ClipperOffset {
 
     private static inline function normalizeVector(vec:PointD):PointD {
         var h = hypotenuse(vec.x, vec.y);
-        if (almostZero(h)) return new PointD(0, 0);
+        if (almostZero(h)) return PointD.get(0, 0);
         var inverseHypot = 1 / h;
-        return new PointD(vec.x * inverseHypot, vec.y * inverseHypot);
+        return PointD.get(vec.x * inverseHypot, vec.y * inverseHypot);
     }
 
     private static inline function getAvgUnitVector(vec1:PointD, vec2:PointD):PointD {
-        return normalizeVector(new PointD(vec1.x + vec2.x, vec1.y + vec2.y));
+        return normalizeVector(PointD.get(vec1.x + vec2.x, vec1.y + vec2.y));
     }
 
     private inline function getPerpendic(pt:Point64, norm:PointD):Point64 {
         #if clipper_usingz
-        return new Point64(
+        return Point64.get(
             InternalClipper.roundToInt64(InternalClipper.toFloat(pt.x) + norm.x * _groupDelta),
             InternalClipper.roundToInt64(InternalClipper.toFloat(pt.y) + norm.y * _groupDelta),
             pt.z
         );
         #else
-        return new Point64(
+        return Point64.get(
             InternalClipper.roundToInt64(InternalClipper.toFloat(pt.x) + norm.x * _groupDelta),
             InternalClipper.roundToInt64(InternalClipper.toFloat(pt.y) + norm.y * _groupDelta)
         );
@@ -323,13 +323,13 @@ class ClipperOffset {
 
     private inline function getPerpendicD(pt:Point64, norm:PointD):PointD {
         #if clipper_usingz
-        return new PointD(
+        return PointD.get(
             InternalClipper.toFloat(pt.x) + norm.x * _groupDelta,
             InternalClipper.toFloat(pt.y) + norm.y * _groupDelta,
             pt.z
         );
         #else
-        return new PointD(
+        return PointD.get(
             InternalClipper.toFloat(pt.x) + norm.x * _groupDelta,
             InternalClipper.toFloat(pt.y) + norm.y * _groupDelta
         );
@@ -341,44 +341,44 @@ class ClipperOffset {
         if (j == k) {
             var absDelta = Math.abs(_groupDelta);
             #if clipper_usingz
-            pt1 = new Point64(
+            pt1 = Point64.get(
                 InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].x) - absDelta * _normals[j].x),
                 InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].y) - absDelta * _normals[j].y),
                 path[j].z
             );
-            pt2 = new Point64(
+            pt2 = Point64.get(
                 InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].x) + absDelta * _normals[j].x),
                 InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].y) + absDelta * _normals[j].y),
                 path[j].z
             );
             #else
-            pt1 = new Point64(
+            pt1 = Point64.get(
                 InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].x) - absDelta * _normals[j].x),
                 InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].y) - absDelta * _normals[j].y)
             );
-            pt2 = new Point64(
+            pt2 = Point64.get(
                 InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].x) + absDelta * _normals[j].x),
                 InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].y) + absDelta * _normals[j].y)
             );
             #end
         } else {
             #if clipper_usingz
-            pt1 = new Point64(
+            pt1 = Point64.get(
                 InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].x) + _groupDelta * _normals[k].x),
                 InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].y) + _groupDelta * _normals[k].y),
                 path[j].z
             );
-            pt2 = new Point64(
+            pt2 = Point64.get(
                 InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].x) + _groupDelta * _normals[j].x),
                 InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].y) + _groupDelta * _normals[j].y),
                 path[j].z
             );
             #else
-            pt1 = new Point64(
+            pt1 = Point64.get(
                 InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].x) + _groupDelta * _normals[k].x),
                 InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].y) + _groupDelta * _normals[k].y)
             );
-            pt2 = new Point64(
+            pt2 = Point64.get(
                 InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].x) + _groupDelta * _normals[j].x),
                 InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].y) + _groupDelta * _normals[j].y)
             );
@@ -391,17 +391,17 @@ class ClipperOffset {
     private function doSquare(path:Path64, j:Int, k:Int):Void {
         var vec:PointD;
         if (j == k) {
-            vec = new PointD(_normals[j].y, -_normals[j].x);
+            vec = PointD.get(_normals[j].y, -_normals[j].x);
         } else {
             vec = getAvgUnitVector(
-                new PointD(-_normals[k].y, _normals[k].x),
-                new PointD(_normals[j].y, -_normals[j].x)
+                PointD.get(-_normals[k].y, _normals[k].x),
+                PointD.get(_normals[j].y, -_normals[j].x)
             );
         }
 
         var absDelta = Math.abs(_groupDelta);
         // now offset the original vertex delta units along unit vector
-        var ptQ = new PointD(InternalClipper.toFloat(path[j].x), InternalClipper.toFloat(path[j].y));
+        var ptQ = PointD.get(InternalClipper.toFloat(path[j].x), InternalClipper.toFloat(path[j].y));
         ptQ = translatePoint(ptQ, absDelta * vec.x, absDelta * vec.y);
 
         // get perpendicular vertices
@@ -411,7 +411,7 @@ class ClipperOffset {
         var pt3 = getPerpendicD(path[k], _normals[k]);
 
         if (j == k) {
-            var pt4 = new PointD(
+            var pt4 = PointD.get(
                 pt3.x + vec.x * _groupDelta,
                 pt3.y + vec.y * _groupDelta
             );
@@ -439,13 +439,13 @@ class ClipperOffset {
     private function doMiter(path:Path64, j:Int, k:Int, cosA:Float):Void {
         var q = _groupDelta / (cosA + 1);
         #if clipper_usingz
-        pathOut.push(new Point64(
+        pathOut.push(Point64.get(
             InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].x) + (_normals[k].x + _normals[j].x) * q),
             InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].y) + (_normals[k].y + _normals[j].y) * q),
             path[j].z
         ));
         #else
-        pathOut.push(new Point64(
+        pathOut.push(Point64.get(
             InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].x) + (_normals[k].x + _normals[j].x) * q),
             InternalClipper.roundToInt64(InternalClipper.toFloat(path[j].y) + (_normals[k].y + _normals[j].y) * q)
         ));
@@ -466,17 +466,17 @@ class ClipperOffset {
         }
 
         var pt = path[j];
-        var offsetVec = new PointD(_normals[k].x * _groupDelta, _normals[k].y * _groupDelta);
+        var offsetVec = PointD.get(_normals[k].x * _groupDelta, _normals[k].y * _groupDelta);
         if (j == k) offsetVec.negate();
 
         #if clipper_usingz
-        pathOut.push(new Point64(
+        pathOut.push(Point64.get(
             InternalClipper.roundToInt64(InternalClipper.toFloat(pt.x) + offsetVec.x),
             InternalClipper.roundToInt64(InternalClipper.toFloat(pt.y) + offsetVec.y),
             pt.z
         ));
         #else
-        pathOut.push(new Point64(
+        pathOut.push(Point64.get(
             InternalClipper.roundToInt64(InternalClipper.toFloat(pt.x) + offsetVec.x),
             InternalClipper.roundToInt64(InternalClipper.toFloat(pt.y) + offsetVec.y)
         ));
@@ -484,18 +484,18 @@ class ClipperOffset {
 
         var steps = Std.int(Math.ceil(_stepsPerRad * Math.abs(angle)));
         for (i in 1...steps) { // ie 1 less than steps
-            offsetVec = new PointD(
+            offsetVec = PointD.get(
                 offsetVec.x * _stepCos - _stepSin * offsetVec.y,
                 offsetVec.x * _stepSin + offsetVec.y * _stepCos
             );
             #if clipper_usingz
-            pathOut.push(new Point64(
+            pathOut.push(Point64.get(
                 InternalClipper.roundToInt64(InternalClipper.toFloat(pt.x) + offsetVec.x),
                 InternalClipper.roundToInt64(InternalClipper.toFloat(pt.y) + offsetVec.y),
                 pt.z
             ));
             #else
-            pathOut.push(new Point64(
+            pathOut.push(Point64.get(
                 InternalClipper.roundToInt64(InternalClipper.toFloat(pt.x) + offsetVec.x),
                 InternalClipper.roundToInt64(InternalClipper.toFloat(pt.y) + offsetVec.y)
             ));
@@ -612,7 +612,7 @@ class ClipperOffset {
         // reverse normals ...
         var i = highI;
         while (i > 0) {
-            _normals[i] = new PointD(-_normals[i - 1].x, -_normals[i - 1].y);
+            _normals[i] = PointD.get(-_normals[i - 1].x, -_normals[i - 1].y);
             i--;
         }
         _normals[0] = _normals[highI];
@@ -771,12 +771,12 @@ class ClipperOffset {
         var result = new Path64();
         var centerX = InternalClipper.toFloat(center.x);
         var centerY = InternalClipper.toFloat(center.y);
-        result.push(new Point64(
+        result.push(Point64.get(
             InternalClipper.roundToInt64(centerX + radiusX),
             InternalClipper.roundToInt64(centerY)
         ));
         for (i in 1...steps) {
-            result.push(new Point64(
+            result.push(Point64.get(
                 InternalClipper.roundToInt64(centerX + radiusX * dx),
                 InternalClipper.roundToInt64(centerY + radiusY * dy)
             ));

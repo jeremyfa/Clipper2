@@ -426,6 +426,24 @@ abstract Point64(Point64Impl) from Point64Impl {
         this = new Point64Impl(x, y #if clipper_usingz , z #end);
     }
 
+    /**
+     * Factory method that uses object pooling when tracking is enabled.
+     */
+    public static inline function get(x:ClipperInt64, y:ClipperInt64 #if clipper_usingz , ?z:ClipperInt64 #end):Point64 {
+        var impl = ClipperPool.acquirePoint64Impl();
+        if (impl != null) {
+            impl.x = x;
+            impl.y = y;
+            #if clipper_usingz
+            impl.z = z != null ? z : ClipperInt64.ofInt(0);
+            #end
+        } else {
+            impl = new Point64Impl(x, y #if clipper_usingz , z #end);
+        }
+        ClipperPool.trackPoint64(impl);
+        return cast impl;
+    }
+
     inline function get_x():ClipperInt64 return this.x;
     inline function set_x(value:ClipperInt64):ClipperInt64 return this.x = value;
     inline function get_y():ClipperInt64 return this.y;
@@ -439,14 +457,14 @@ abstract Point64(Point64Impl) from Point64Impl {
      * Copy constructor.
      */
     public static inline function copy(pt:Point64):Point64 {
-        return new Point64(pt.x, pt.y #if clipper_usingz , pt.z #end);
+        return Point64.get(pt.x, pt.y #if clipper_usingz , pt.z #end);
     }
 
     /**
      * Create from Point64 with scale.
      */
     public static inline function fromScaled(pt:Point64, scale:Float):Point64 {
-        return new Point64(
+        return Point64.get(
             ClipperInt64.roundFromFloat(pt.x.toFloat() * scale),
             ClipperInt64.roundFromFloat(pt.y.toFloat() * scale)
             #if clipper_usingz
@@ -459,7 +477,7 @@ abstract Point64(Point64Impl) from Point64Impl {
      * Create from PointD.
      */
     public static inline function fromPointD(pt:PointD):Point64 {
-        return new Point64(
+        return Point64.get(
             ClipperInt64.roundFromFloat(pt.x),
             ClipperInt64.roundFromFloat(pt.y)
             #if clipper_usingz
@@ -472,7 +490,7 @@ abstract Point64(Point64Impl) from Point64Impl {
      * Create from PointD with scale.
      */
     public static inline function fromPointDScaled(pt:PointD, scale:Float):Point64 {
-        return new Point64(
+        return Point64.get(
             ClipperInt64.roundFromFloat(pt.x * scale),
             ClipperInt64.roundFromFloat(pt.y * scale)
             #if clipper_usingz
@@ -485,7 +503,7 @@ abstract Point64(Point64Impl) from Point64Impl {
      * Create from float coordinates.
      */
     public static inline function fromFloats(x:Float, y:Float #if clipper_usingz , z:Float = 0.0 #end):Point64 {
-        return new Point64(
+        return Point64.get(
             ClipperInt64.roundFromFloat(x),
             ClipperInt64.roundFromFloat(y)
             #if clipper_usingz
@@ -503,7 +521,7 @@ abstract Point64(Point64Impl) from Point64Impl {
     }
 
     @:op(A + B) public static inline function add(lhs:Point64, rhs:Point64):Point64 {
-        return new Point64(
+        return Point64.get(
             lhs.x + rhs.x,
             lhs.y + rhs.y
             #if clipper_usingz
@@ -513,7 +531,7 @@ abstract Point64(Point64Impl) from Point64Impl {
     }
 
     @:op(A - B) public static inline function sub(lhs:Point64, rhs:Point64):Point64 {
-        return new Point64(
+        return Point64.get(
             lhs.x - rhs.x,
             lhs.y - rhs.y
             #if clipper_usingz
@@ -572,6 +590,24 @@ abstract PointD(PointDImpl) from PointDImpl {
         this = new PointDImpl(x, y #if clipper_usingz , z #end);
     }
 
+    /**
+     * Factory method that uses object pooling when tracking is enabled.
+     */
+    public static inline function get(x:Float, y:Float #if clipper_usingz , ?z:ClipperInt64 #end):PointD {
+        var impl = ClipperPool.acquirePointDImpl();
+        if (impl != null) {
+            impl.x = x;
+            impl.y = y;
+            #if clipper_usingz
+            impl.z = z != null ? z : ClipperInt64.ofInt(0);
+            #end
+        } else {
+            impl = new PointDImpl(x, y #if clipper_usingz , z #end);
+        }
+        ClipperPool.trackPointD(impl);
+        return cast impl;
+    }
+
     inline function get_x():Float return this.x;
     inline function set_x(value:Float):Float return this.x = value;
     inline function get_y():Float return this.y;
@@ -585,14 +621,14 @@ abstract PointD(PointDImpl) from PointDImpl {
      * Copy constructor.
      */
     public static inline function copy(pt:PointD):PointD {
-        return new PointD(pt.x, pt.y #if clipper_usingz , pt.z #end);
+        return PointD.get(pt.x, pt.y #if clipper_usingz , pt.z #end);
     }
 
     /**
      * Create from PointD with scale.
      */
     public static inline function fromScaled(pt:PointD, scale:Float):PointD {
-        return new PointD(
+        return PointD.get(
             pt.x * scale,
             pt.y * scale
             #if clipper_usingz
@@ -605,7 +641,7 @@ abstract PointD(PointDImpl) from PointDImpl {
      * Create from Point64.
      */
     public static inline function fromPoint64(pt:Point64):PointD {
-        return new PointD(
+        return PointD.get(
             pt.x.toFloat(),
             pt.y.toFloat()
             #if clipper_usingz
@@ -618,7 +654,7 @@ abstract PointD(PointDImpl) from PointDImpl {
      * Create from Point64 with scale.
      */
     public static inline function fromPoint64Scaled(pt:Point64, scale:Float):PointD {
-        return new PointD(
+        return PointD.get(
             pt.x.toFloat() * scale,
             pt.y.toFloat() * scale
             #if clipper_usingz
@@ -631,7 +667,7 @@ abstract PointD(PointDImpl) from PointDImpl {
      * Create from integer coordinates.
      */
     public static inline function fromInts(x:ClipperInt64, y:ClipperInt64 #if clipper_usingz , ?z:ClipperInt64 #end):PointD {
-        return new PointD(
+        return PointD.get(
             x.toFloat(),
             y.toFloat()
             #if clipper_usingz
@@ -726,7 +762,7 @@ class Rect64 {
     }
 
     public inline function midPoint():Point64 {
-        return new Point64((left + right) / 2, (top + bottom) / 2);
+        return Point64.get((left + right) / 2, (top + bottom) / 2);
     }
 
     public inline function contains(pt:Point64):Bool {
@@ -745,10 +781,10 @@ class Rect64 {
 
     public function asPath():Path64 {
         var result = new Path64();
-        result.push(new Point64(left, top));
-        result.push(new Point64(right, top));
-        result.push(new Point64(right, bottom));
-        result.push(new Point64(left, bottom));
+        result.push(Point64.get(left, top));
+        result.push(Point64.get(right, top));
+        result.push(Point64.get(right, bottom));
+        result.push(Point64.get(left, bottom));
         return result;
     }
 }
@@ -803,7 +839,7 @@ class RectD {
     }
 
     public inline function midPoint():PointD {
-        return new PointD((left + right) / 2, (top + bottom) / 2);
+        return PointD.get((left + right) / 2, (top + bottom) / 2);
     }
 
     public inline function contains(pt:PointD):Bool {
@@ -822,10 +858,10 @@ class RectD {
 
     public function asPath():PathD {
         var result = new PathD();
-        result.push(new PointD(left, top));
-        result.push(new PointD(right, top));
-        result.push(new PointD(right, bottom));
-        result.push(new PointD(left, bottom));
+        result.push(PointD.get(left, top));
+        result.push(PointD.get(right, top));
+        result.push(PointD.get(right, bottom));
+        result.push(PointD.get(left, bottom));
         return result;
     }
 }
@@ -1119,7 +1155,7 @@ class InternalClipper {
         var det = dy1 * dx2 - dy2 * dx1;
 
         if (det == 0.0) {
-            return {ip: new Point64(0, 0), success: false};
+            return {ip: Point64.get(0, 0), success: false};
         }
 
         var t = ((ln1a.x.toFloat() - ln2a.x.toFloat()) * dy2 - (ln1a.y.toFloat() - ln2a.y.toFloat()) * dx2) / det;
@@ -1129,7 +1165,7 @@ class InternalClipper {
         } else if (t >= 1.0) {
             ip = Point64.copy(ln1b);
         } else {
-            ip = new Point64(
+            ip = Point64.get(
                 ClipperInt64.fromFloat(ln1a.x.toFloat() + t * dx1),
                 ClipperInt64.fromFloat(ln1a.y.toFloat() + t * dy1)
                 #if clipper_usingz
@@ -1151,7 +1187,7 @@ class InternalClipper {
         var det = dy1 * dx2 - dy2 * dx1;
 
         if (det == 0.0) {
-            return {ip: new PointD(0, 0), success: false};
+            return {ip: PointD.get(0, 0), success: false};
         }
 
         var t = ((ln1a.x - ln2a.x) * dy2 - (ln1a.y - ln2a.y) * dx2) / det;
@@ -1161,7 +1197,7 @@ class InternalClipper {
         } else if (t >= 1.0) {
             ip = PointD.copy(ln1b);
         } else {
-            ip = new PointD(
+            ip = PointD.get(
                 ln1a.x + t * dx1,
                 ln1a.y + t * dy1
                 #if clipper_usingz
@@ -1235,7 +1271,7 @@ class InternalClipper {
         if (q < 0) q = 0;
         else if (q > 1) q = 1;
         // Use MidpointRounding.ToEven to match C++ nearbyint behavior
-        return new Point64(
+        return Point64.get(
             ClipperInt64.roundEvenFromFloat(seg1.x.toFloat() + q * dx),
             ClipperInt64.roundEvenFromFloat(seg1.y.toFloat() + q * dy)
         );
@@ -1364,7 +1400,7 @@ class InternalClipper {
     public static function setZ(path:Path64, z:ClipperInt64):Path64 {
         var result = new Path64();
         for (pt in path) {
-            result.push(new Point64(pt.x, pt.y, z));
+            result.push(Point64.get(pt.x, pt.y, z));
         }
         return result;
     }

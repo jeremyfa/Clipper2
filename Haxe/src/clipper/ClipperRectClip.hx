@@ -247,7 +247,7 @@ class RectClip64 {
         }
 
         if ((res1 > 0) == (res2 > 0)) {
-            return {ip: new Point64(0, 0), success: false};
+            return {ip: Point64.get(0, 0), success: false};
         }
 
         var res3 = InternalClipper.crossProductSign(p3, p1, p2);
@@ -263,7 +263,7 @@ class RectClip64 {
             return {ip: p4, success: (p4.y > p1.y) == (p4.y < p2.y)};
         }
         if ((res3 > 0) == (res4 > 0)) {
-            return {ip: new Point64(0, 0), success: false};
+            return {ip: Point64.get(0, 0), success: false};
         }
 
         // segments must intersect to get here
@@ -272,7 +272,7 @@ class RectClip64 {
     }
 
     static function getIntersection(rectPath:Path64, p:Point64, p2:Point64, loc:Location):{ip:Point64, loc:Location, success:Bool} {
-        var ip = new Point64(0, 0);
+        var ip = Point64.get(0, 0);
         switch (loc) {
             case Location.Left:
                 var result = getSegmentIntersection(p, p2, rectPath[0], rectPath[3]);

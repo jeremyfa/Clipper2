@@ -8,6 +8,7 @@ import clipper.ClipperRectClip;
 import clipper.ClipperMinkowski;
 import clipper.ClipperTriangulation;
 import clipper.Clipper;
+import test.TestPooling;
 
 class TestRunner {
     static var passed:Int = 0;
@@ -28,6 +29,7 @@ class TestRunner {
         testMinkowski();
         testTriangulation();
         testClipperHighLevelAPI();
+        testPooling();
 
         trace('\n=== Test Summary ===');
         trace('Passed: $passed');
@@ -833,5 +835,11 @@ class TestRunner {
         assertTrue(stripped.length == 4, "stripDuplicates removes duplicates");
 
         trace("Clipper High-Level API tests complete.");
+    }
+
+    static function testPooling():Void {
+        TestPooling.run();
+        passed += TestPooling.passed;
+        failed += TestPooling.failed;
     }
 }
